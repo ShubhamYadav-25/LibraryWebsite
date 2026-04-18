@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosInstance.js';
+
 import {  
   Search,
   Plus,
@@ -470,7 +471,7 @@ const UsersPage = () => {
         if (searchQuery) params.search = searchQuery;
         if (filterDepartment !== 'All Departments') params.department = filterDepartment;
   
-        const res = await axios.get('http://localhost:5000/user', {
+        const res = await api.get('/user', {
           params,
           withCredentials: true,
         });
@@ -500,8 +501,8 @@ const UsersPage = () => {
   const handleViewUser = async (user) => {
     try {
       setSelectedUser(null); // Reset before fetching new data
-      const res = await axios.get(
-        `http://localhost:5000/user/${user.studentId}`,
+      const res = await api.get(
+        `/user/${user.studentId}`,
         { withCredentials: true }
       );
       const userData = res.data.User || res.data;
@@ -516,8 +517,8 @@ const UsersPage = () => {
 
   const handleUpdateUser = async (userData) => {
     try {
-      await axios.put(
-        `http://localhost:5000/user/${userData.studentId}`,
+      await api.put(
+        `/user/${userData.studentId}`,
         userData,
         { withCredentials: true }
       );
@@ -531,8 +532,8 @@ const UsersPage = () => {
 
   const handleAddNewUser = async (userData) => {
     try {
-      await axios.post(
-        'http://localhost:5000/user',
+      await api.post(
+        '/user',
         userData,
         { withCredentials: true }
       );

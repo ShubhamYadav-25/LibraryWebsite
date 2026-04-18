@@ -16,7 +16,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosInstance.js';
 
 
 const BookModal = ({ isOpen, onClose, book, onSave }) => {
@@ -408,7 +408,7 @@ const BookCatalogPage = () => {
       const trimmed = searchTermSubmitted.trim();
       if (trimmed) params.bookName = trimmed;
   
-      const response = await axios.get('http://localhost:5000/books/', {
+      const response = await api.get('/books', {
         params,
         withCredentials: true,
       });
@@ -449,7 +449,7 @@ const BookCatalogPage = () => {
 
   const handleEditBook = async(book) => {
     try {
-      const response = await axios.get(`http://localhost:5000/books/${book.book_id}`, { withCredentials: true });
+      const response = await api.get(`/books/${book.book_id}`, { withCredentials: true });
       const bookData = response.data;
       console.log(bookData);
       setEditingBook(bookData);
@@ -463,10 +463,10 @@ const BookCatalogPage = () => {
     try {
       if (editingBook) {
         // Edit book
-        await axios.put(`http://localhost:5000/books/${editingBook.book_id}`, bookData, { withCredentials: true });
+        await api.put(`/books/${editingBook.book_id}`, bookData, { withCredentials: true });
       } else {
         // Add book
-        await axios.post('http://localhost:5000/books/', bookData, { withCredentials: true });
+        await api.post('/books', bookData, { withCredentials: true });
       }
       // Refresh books
       fetchBooks(searchQuery, page);
@@ -479,7 +479,7 @@ const BookCatalogPage = () => {
   const handleDeleteBook = async (book) => {
     if (window.confirm(`Are you sure you want to delete "${book.title}"?`)) {
       try {
-        await axios.delete(`http://localhost:5000/books/${book.book_id}`, { withCredentials: true });
+        await api.delete(`/books/${book.book_id}`, { withCredentials: true });
         // Refresh books
         fetchBooks(searchQuery, page);
       } catch (err) {

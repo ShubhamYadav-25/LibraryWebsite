@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosInstance';
 import { 
   BookOpen, 
   Search,
@@ -285,13 +285,13 @@ const IssueReturnPage = () => {
         };
 
         if (activeTab === 'ISSUE_REQUESTS') {
-          url = 'http://localhost:5000/user/requests';
+          url = '/user/requests';
         } else {
-          url = 'http://localhost:5000/user/transactions';
+          url = '/user/transactions';
           params.active = activeTab === 'ACTIVE';
         }
 
-        const res = await axios.get(url, {
+        const res = await api.get(url, {
           params,
           withCredentials: true
         });
@@ -311,8 +311,8 @@ const IssueReturnPage = () => {
 
   const handleApproveIssue = async (request) => {
     try {
-      const res = await axios.post(
-        `http://localhost:5000/book/${request.book_id}/issue`,
+      const res = await api.post(
+        `/book/${request.book_id}/issue`,
         { requestId: request.request_id },
         { withCredentials: true }
       );
@@ -326,8 +326,8 @@ const IssueReturnPage = () => {
 
   const handleReject = async (request) => {
     try {
-      const res = await axios.put(
-        `http://localhost:5000/user/requests/${request.request_id}`,
+      const res = await api.put(
+        `/user/requests/${request.request_id}`,
         { status: 'cancelled' },
         { withCredentials: true }
       );

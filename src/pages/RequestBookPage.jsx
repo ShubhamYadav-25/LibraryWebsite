@@ -42,8 +42,9 @@ const RequestBookPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log(formData.book_id);
       const res = await api.post(
-        `/books/${formData.book_id}/request`,
+        `/books/${formData.book_id}/requests`,
         { formData },
         { withCredentials: true }
       );
@@ -54,6 +55,7 @@ const RequestBookPage = () => {
         setFormData(defaultData);
       }
     } catch (error) {
+      console.error("Error requesting book:", error);
       toast.error("❌ Unable to request this book!");
     }
   };

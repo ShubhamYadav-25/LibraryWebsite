@@ -129,7 +129,7 @@ export default function AuthPage() {
           lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
-          role: role
+          role: "Student"
         },
         {
           headers: {
