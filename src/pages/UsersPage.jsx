@@ -254,16 +254,16 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
           {/* User Profile Section */}
           <div className="flex items-center space-x-6 mb-8 pb-8 border-b border-gray-200">
             <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-              {user.fullName.split(' ').map(n => n[0]).join('')}
+              {user.name.split(' ').map(n => n[0]).join('')}
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">{user.fullName}</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{user.name}</h3>
               <p className="text-gray-600">{user.studentId}</p>
               <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
                 user.fine == 0.00 ? 'bg-green-100 text-green-700' :
                   'bg-red-100 text-red-700' 
                 }`}>
-                Fine: {user.fine || 0.00}
+                Fine: {user.totalFine || 0.00}
               </span>
             </div>
           </div>
@@ -364,10 +364,10 @@ const UserTableRow = ({ user, onEdit, onDelete, onView }) => {
       <td className="px-6 py-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-            {user.fullName.split(' ').map(n => n[0]).join('')}
+            {user.name.split(' ').map(n => n[0]).join('')}
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{user.fullName}</p>
+            <p className="font-semibold text-gray-900">{user.name}</p>
             <p className="text-sm text-gray-600">{user.studentId}</p>
           </div>
         </div>
@@ -391,7 +391,7 @@ const UserTableRow = ({ user, onEdit, onDelete, onView }) => {
           user.fine == 0.00 ? 'bg-green-100 text-green-700' :
           'bg-red-100 text-red-700' 
         }`}>
-          {user.fine || 0.00}
+          {user.totalFine || 0.00}
         </span>
       </td>
       <td className="px-6 py-4">
@@ -471,7 +471,7 @@ const UsersPage = () => {
         if (searchQuery) params.search = searchQuery;
         if (filterDepartment !== 'All Departments') params.department = filterDepartment;
   
-        const res = await api.get('/user', {
+        const res = await api.get('/admin/users', {
           params,
           withCredentials: true,
         });
@@ -502,10 +502,10 @@ const UsersPage = () => {
     try {
       setSelectedUser(null); // Reset before fetching new data
       const res = await api.get(
-        `/user/${user.studentId}`,
+        `/users/${user.studentId}`,
         { withCredentials: true }
       );
-      const userData = res.data.User || res.data;
+      const userData = res.data;
       console.log('Fetched user:', userData);
       setSelectedUser(userData);
       setShowDetailsModal(true);

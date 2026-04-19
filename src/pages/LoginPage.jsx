@@ -97,9 +97,8 @@ export default function AuthPage() {
       setUser(user);
       localStorage.setItem("isAuth", true);
       localStorage.setItem("user", JSON.stringify(user));
-      console.log(localStorage.getItem("user"));
   
-      navigate(user.studentId? "/dashboard" : "/admin/dashboard" );
+      navigate(user.studentId? "/dashboard" : "/admindashboard" );
   
     } catch (err) {
       setIsAuth(false);

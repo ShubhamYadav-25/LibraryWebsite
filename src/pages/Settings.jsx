@@ -55,7 +55,7 @@ const InputField = ({ label, type = 'text', value, onChange, placeholder, requir
 const ToggleSwitch = ({ label, description, checked, onChange }) => (
   <div className="flex items-center justify-between py-3">
     <div>
-      <p className="font-medium text-gray-900">{label}</p>
+      <p className="text-left font-medium text-gray-900">{label}</p>
       {description && <p className="text-sm text-gray-600">{description}</p>}
     </div>
     <button

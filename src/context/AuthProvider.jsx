@@ -4,7 +4,6 @@ const AuthContext = createContext();
 
 const parseLocalUser = () => {
   const storedUser = localStorage.getItem("user");
-  console.log("Parsing user from localStorage:", storedUser);
   if (!storedUser) return null;
   try {
     return JSON.parse(storedUser);

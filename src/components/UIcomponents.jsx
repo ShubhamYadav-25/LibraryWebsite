@@ -372,6 +372,8 @@ export const IssuedBookCard = ({ book, isSelected, onSelect }) => {
   let status = null; 
   const dueDate = book.dueDate ? new Date(book.dueDate) : null;
   const today = new Date();
+  const CLOUD_NAME = "dirsttw39";
+
   today.setHours(0, 0, 0, 0);
 
   const normalizedDueDate = new Date(dueDate);
@@ -403,10 +405,10 @@ export const IssuedBookCard = ({ book, isSelected, onSelect }) => {
         : 'border-gray-200 hover:border-purple-300'
     }`}
 >
-    <div className="w-16 h-20 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
+    <div className="w-20 h-26 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
             {book.image ? (
             <img
-              src={book.image ? `http://localhost:5000/bookimages/${book.image}` : "/book.png"}
+              src={book.image ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
               alt={book.title}
               className="w-full h-full object-cover"
             />

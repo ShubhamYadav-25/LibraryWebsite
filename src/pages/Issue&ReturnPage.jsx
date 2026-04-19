@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api/axiosInstance';
+import api from '../api/axiosInstance.js';
 import { 
   BookOpen, 
   Search,
@@ -11,8 +11,7 @@ import {
   Filter,
   Download
 } from 'lucide-react';
-// import { use } from 'react';
-
+import { toast } from 'react-toastify';
 
 const formatDate = (date) =>
   new Date(date).toLocaleDateString('en-IN', {
@@ -67,7 +66,7 @@ const IssueBookModal = ({ isOpen, onClose, onIssue }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 mt-2">
               Book ISBN or Title *
             </label>
             <div className="relative">
@@ -83,7 +82,7 @@ const IssueBookModal = ({ isOpen, onClose, onIssue }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 p-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Genre
@@ -116,7 +115,7 @@ const IssueBookModal = ({ isOpen, onClose, onIssue }) => {
             </p>
           </div>
 
-          <div className="flex space-x-4">
+          <div className="grid grid-cols-2 gap-4 p-2">
             <button
               onClick={handleSubmit}
               className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
@@ -285,10 +284,10 @@ const IssueReturnPage = () => {
         };
 
         if (activeTab === 'ISSUE_REQUESTS') {
-          url = '/user/requests';
+          url = '/admin/requests?mode=active';
         } else {
-          url = '/user/transactions';
-          params.active = activeTab === 'ACTIVE';
+          url = '/admin/transactions';
+          params.status = activeTab === 'ACTIVE'? 'active':'passive';
         }
 
         const res = await api.get(url, {
@@ -296,7 +295,6 @@ const IssueReturnPage = () => {
           withCredentials: true
         });
 
-        console.log(`${activeTab} Data:`, res.data);
         setData(res.data.data || []);
         setTotal(res.data.total || 0);
       } catch (err) {
@@ -312,11 +310,14 @@ const IssueReturnPage = () => {
   const handleApproveIssue = async (request) => {
     try {
       const res = await api.post(
-        `/book/${request.book_id}/issue`,
-        { requestId: request.request_id },
+        `/books/${request.book_id}/issues`,
+        request,
         { withCredentials: true }
       );
-      console.log('Issue approved:', res.data);
+
+      if (res.status === 200) {
+        toast.success('Issue approved successfully');
+      }
       // Refresh data
       setPage(1);
     } catch (err) {
@@ -327,11 +328,13 @@ const IssueReturnPage = () => {
   const handleReject = async (request) => {
     try {
       const res = await api.put(
-        `/user/requests/${request.request_id}`,
+        `/admin/requests/${request.request_id}`,
         { status: 'cancelled' },
         { withCredentials: true }
       );
-      console.log('Request rejected:', res.data);
+      if (res.status === 200) {
+        toast.success('Request rejected successfully');
+      }
       // Refresh data
       setPage(1);
     } catch (err) {

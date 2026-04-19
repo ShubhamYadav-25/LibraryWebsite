@@ -203,12 +203,11 @@ const ReturnBooksPage = () => {
       const response = await api.get('/users/me/books', {
         credentials: "include",
       });
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error("Failed to fetch issued books");
       }
-      const data = await response.json();
       // console.log(data);
-      setissuedBooks(data.books || []); // Assuming the API returns a 'books' key
+      setissuedBooks(response.data || []); // Assuming the API returns a 'books' key
     } catch (error) {
       console.error("Error fetching books:", error);
     }

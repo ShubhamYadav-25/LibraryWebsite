@@ -17,41 +17,55 @@ import {
 } from 'lucide-react';
 import { useEffect } from 'react';
 import api from '../api/axiosInstance.js';
+import { toast } from 'react-toastify';
+
+const createEmptyBookForm = () => ({
+  title: '',
+  image: '',
+  author: '',
+  ISBN: '',
+  genre: '',
+  year: '',
+  pages: '',
+  language: 'English',
+  total_copy: '',
+  issued_copy: 0,
+  location: '',
+  description: '',
+});
+
+const normalizeBookFormData = (book = null) => {
+  const emptyForm = createEmptyBookForm();
+
+  if (!book) {
+    return emptyForm;
+  }
+
+  return {
+    ...emptyForm,
+    ...book,
+    image: book.image ?? '',
+    title: book.title ?? '',
+    author: book.author ?? '',
+    ISBN: book.ISBN ?? book.isbn ?? '',
+    genre: book.genre ?? '',
+    year: book.year ?? book.publicationYear ?? '',
+    pages: book.pages ?? '',
+    language: book.language ?? 'English',
+    total_copy: book.total_copy ?? book.quantity ?? '',
+    issued_copy: book.issued_copy ?? 0,
+    location: book.location ?? '',
+    description: book.description ?? '',
+  };
+};
 
 
 const BookModal = ({ isOpen, onClose, book, onSave }) => {
-  const [formData, setFormData] = useState(book || {
-    title: '',
-    author: '',
-    isbn: '',
-    genre: '',
-    publicationYear: '', //year
-    pages: '',  //skip
-    language: 'English', //skip
-    quantity: '',
-    availableCopies: '',
-    location: '',
-    description: ''
-  });
+  const [formData, setFormData] = useState(() => normalizeBookFormData(book));
+  const CLOUD_NAME = "dirsttw39";
 
   useEffect(() => {
-    if (book) {
-      setFormData(book);
-    } else {
-      setFormData({
-        title: '',
-        author: '',
-        isbn: '',
-        genre: '',
-        publicationYear: '',
-        pages: '',
-        language: 'English',
-        quantity: '',
-        availableCopies: '',
-        location: '',
-        description: ''
-      });
-    }
+    setFormData(normalizeBookFormData(book));
   }, [book]);
 
   if (!isOpen) return null;
@@ -85,7 +99,7 @@ const BookModal = ({ isOpen, onClose, book, onSave }) => {
               {book?.image ? (
                 <div>
                 <img
-                  src={book.image ? `http://localhost:5000/bookimages/${book.image}` : "/book.png"}
+                  src={book.image ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
                   alt={book.title}
                   className="w-32 h-44 mx-auto object-cover border border-gray-300 rounded-lg shadow-sm"
                   loading="lazy"
@@ -145,7 +159,7 @@ const BookModal = ({ isOpen, onClose, book, onSave }) => {
                 type="text"
                 required
                 value={formData.ISBN}
-                onChange={(e) => setFormData({...formData, isbn: e.target.value})}
+                onChange={(e) => setFormData({...formData, ISBN: e.target.value})}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="978-0-123456-78-9"
               />
@@ -242,7 +256,7 @@ const BookModal = ({ isOpen, onClose, book, onSave }) => {
               <input
                 type="number"
                 readOnly
-                value={formData.total_copy - formData.issued_copy || 0}
+                value={Math.max(Number(formData.total_copy || 0) - Number(formData.issued_copy || 0), 0)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="8"
               />
@@ -464,9 +478,11 @@ const BookCatalogPage = () => {
       if (editingBook) {
         // Edit book
         await api.put(`/books/${editingBook.book_id}`, bookData, { withCredentials: true });
+        toast.success('Book updated successfully');
       } else {
         // Add book
         await api.post('/books', bookData, { withCredentials: true });
+        toast.success('Book added successfully');
       }
       // Refresh books
       fetchBooks(searchQuery, page);

@@ -53,7 +53,6 @@ const Dashboard = () => {
         if (booksRes.status === 200) {
           const returned = booksRes.data.books || [];
           setBooks(returned);
-          console.log("Books data set:", returned.length, "books");
         }
 
         if (statsRes.status === 200) {
@@ -69,7 +68,6 @@ const Dashboard = () => {
         if (activityRes.status === 200 && activityRes.data?.activities) {
           const mapped = mapActivities(activityRes.data.activities || []);
           setRecentActivity(mapped);
-          console.log("Activity data set:", mapped.length, "activities");
         }
 
       } catch (error) {
@@ -84,7 +82,6 @@ const Dashboard = () => {
         ]);
         setRecentActivity([]);
       } finally {
-        console.log("Finished loading - setting loading to false");
         setLoading(false);
       }
     };
