@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { Smartphone, Wallet, X } from "lucide-react";
-import axios from "axios";
-
+import api from "../api/axiosInstance";
 /**
  * Razorpay-style simulated payment modal for UPI / Cash
  */
@@ -187,19 +186,17 @@ const PaymentHandler = ({ amount, days, payment_id, onPaid, onCancel }) => {
     try {
       setProcessing(true);
 
-      const userid = localStorage.getItem("ID");
-      if (!userid) {
-        toast.error("User not logged in!");
-        return;
-      }
+      const endpoint = payment_id
+        ? `/users/me/fines/${payment_id}`
+        : `/users/me/fines`;
 
-      const res = await axios.put(
-        `http://localhost:5000/user/${userid}/fine`,
+      const res = await api.put(
+        endpoint,
         {
-          payment_id,
-          pay_method: method,
-          transaction_id: txnId,
+          payment_method: method,
+          payment_id: txnId,
           amount,
+          ...(payment_id ? { fine_id: payment_id } : {}),
         },
         { withCredentials: true }
       );
@@ -225,7 +222,7 @@ const PaymentHandler = ({ amount, days, payment_id, onPaid, onCancel }) => {
     setProcessing(true);
     setTimeout(() => {
       const txnId = "TXN" + Math.floor(Math.random() * 1e7);
-      processPayment("upi", txnId);
+      processPayment("UPI", txnId);
     }, 2000);
   };
 
@@ -269,8 +266,8 @@ const PaymentHandler = ({ amount, days, payment_id, onPaid, onCancel }) => {
             <input
               type="radio"
               name="method"
-              checked={method === "upi"}
-              onChange={() => setMethod("upi")}
+              checked={method === "UPI"}
+              onChange={() => setMethod("UPI")}
             />
             <span>UPI</span>
           </label>

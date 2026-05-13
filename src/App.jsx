@@ -3,14 +3,12 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
-// ✅ Correct imports
 import { AuthProvider } from "./context/AuthProvider.jsx";
 import ProtectedRoute from "./components/protectedroutes.jsx";
 
 import UserLayout from "./components/UserLayout.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 
-// Pages
 import HomePage from "./pages/HomePage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import ContactPage from "./pages/ContactPage.jsx";
@@ -38,7 +36,6 @@ function App() {
         <ToastContainer position="bottom-right" autoClose={3000} />
 
         <Routes>
-          {/* ✅ Public Routes (no auth check) */}
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/auth" element={<LoginPage />} />
@@ -46,76 +43,30 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/about" element={<AboutPage />} />
 
-          {/* ✅ User Protected Routes */}
-          <Route element={<UserLayout />}>
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/requestbook"
-              element={
-                <ProtectedRoute>
-                  <RequestBookPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/books"
-              element={
-                <ProtectedRoute>
-                  <ViewBooksPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/returnbook"
-              element={
-                <ProtectedRoute>
-                  <ReturnBooksPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/bookdetail"
-              element={
-                <ProtectedRoute>
-                  <BookDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/searchbook"
-              element={
-                <ProtectedRoute>
-                  <SearchBookPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/finepayments"
-              element={
-                <ProtectedRoute>
-                  <FinesPaymentsPage />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            element={
+              <ProtectedRoute>
+                <UserLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/requestbook" element={<RequestBookPage />} />
+            <Route path="/books" element={<ViewBooksPage />} />
+            <Route path="/returnbook" element={<ReturnBooksPage />} />
+            <Route path="/bookdetail" element={<BookDetailPage />} />
+            <Route path="/searchbook" element={<SearchBookPage />} />
+            <Route path="/finepayments" element={<FinesPaymentsPage />} />
           </Route>
 
-          {/* ⚠️ Admin routes (you can later add AdminProtectedRoute) */}
-          <Route element={<AdminLayout />}>
+          <Route
+            element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/admindashboard" element={<AdminDashboard />} />
             <Route path="/requests" element={<IssueReturnPage />} />
             <Route path="/catalog" element={<BookCatalogPage />} />
@@ -124,7 +75,6 @@ function App() {
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
 
-          {/* 404 */}
           <Route path="*" element={<h1>404 Not Found</h1>} />
         </Routes>
       </Router>

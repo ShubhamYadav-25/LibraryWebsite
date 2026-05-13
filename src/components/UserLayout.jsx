@@ -1,75 +1,54 @@
-// src/components/UserLayout.jsx
-import { Outlet } from "react-router-dom";
-// import UserHeader from "./UserHeader.jsx";
-// import UserSidebar from "./UserSidebar.jsx";
-import Footer from "./Footer.jsx";
-import { 
-  BarChart3, 
-  BookOpen, 
-  Search, 
-  Plus, 
-  RotateCcw, 
-  User,  
-  LogOut,
-  Wallet,
-  Bell, 
-  XCircle
-} from 'lucide-react';
 import { useEffect, useRef, useState } from "react";
-import api from "../api/axiosInstance.js";
+import { Outlet, useNavigate } from "react-router-dom";
+import {
+  BarChart3,
+  Bell,
+  BookOpen,
+  LogOut,
+  Plus,
+  RotateCcw,
+  Search,
+  User,
+  Wallet,
+  XCircle,
+} from "lucide-react";
 import { toast } from "react-toastify";
+import Footer from "./Footer.jsx";
+import useLogout from "../hooks/Logout";
+import { useAuth } from "../context/AuthProvider";
 
 const UserHeader = () => {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const { user } = useAuth();
 
-  const storedUser = localStorage.getItem("user");
-  const user = (() => {
-    if (!storedUser) return "User";
-    try {
-      const parsed = JSON.parse(storedUser);
-      return parsed?.name || "User";
-    } catch (error) {
-      console.error("Failed to parse stored user in UserLayout:", error);
-      return "User";
-    }
-  })();
+  const displayName = user?.name || "User";
+  const initials = displayName
+    .split(" ")
+    .map((namePart) => namePart[0])
+    .join("")
+    .toUpperCase();
 
-  const initials = user
-    ? user
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "?";
-
-  // 🔔 Fetch notifications dynamically
   const fetchNotifications = async () => {
     try {
-      const userid = localStorage.getItem('ID');
-      // const res = await axios.get(`http://localhost:5000/user/${userid}/notifications`, {
-      //   withCredentials: true,
-      // });
-      // if (res.status === 200 && Array.isArray(res.data)) {
-      //   setNotifications(res.data);
-      // }
-    } catch (err) {
-      console.error("Error fetching notifications:", err.message);
+      setNotifications([]);
+    } catch (error) {
+      console.error("Error fetching notifications:", error.message);
     }
   };
 
-  // useEffect(() => {
-  //   fetchNotifications();
-  // }, []);
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-  // 🧭 Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -77,7 +56,6 @@ const UserHeader = () => {
   return (
     <header className="bg-white border-b border-teal-100 px-6 py-4 sticky top-0 z-50 shadow-sm">
       <div className="flex items-center justify-between">
-        {/* Logo + Title */}
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center">
             <BookOpen className="w-7 h-7 text-white" />
@@ -87,25 +65,23 @@ const UserHeader = () => {
           </h1>
         </div>
 
-        {/* Notifications + User */}
         <div className="flex items-center space-x-4 relative">
-          {/* Bell Icon */}
-          <div className="relative p-2 text-teal-600 hover:text-teal-700 
-          hover:bg-teal-50 rounded-xl transition-all duration-200" ref={dropdownRef}>
+          <div
+            className="relative p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-xl transition-all duration-200"
+            ref={dropdownRef}
+          >
             <button
               className="relative focus:outline-none"
-              onClick={() => setShowDropdown((prev) => !prev)}
+              onClick={() => setShowDropdown((current) => !current)}
             >
               <Bell className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors duration-200" />
               {notifications.length > 0 && (
-                <span className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white 
-                text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                <span className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                   {notifications.length}
                 </span>
               )}
             </button>
 
-            {/* Dropdown Panel */}
             {showDropdown && (
               <div className="absolute right-0 mt-3 w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -126,9 +102,9 @@ const UserHeader = () => {
                   </div>
                 ) : (
                   <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                    {notifications.map((note, idx) => (
+                    {notifications.map((note, index) => (
                       <li
-                        key={idx}
+                        key={index}
                         className="px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
                       >
                         <p className="text-sm font-medium text-gray-800">
@@ -148,12 +124,11 @@ const UserHeader = () => {
             )}
           </div>
 
-          {/* User Info */}
           <div className="flex border p-2 rounded-xl shadow border-teal-100 items-center space-x-2">
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-medium">{initials}</span>
             </div>
-            <span className="text-gray-700 font-medium">{user}</span>
+            <span className="text-gray-700 font-medium">{displayName}</span>
           </div>
         </div>
       </div>
@@ -161,77 +136,90 @@ const UserHeader = () => {
   );
 };
 
-const handleLogout = async () => {
-  try {
-    const res = await api.post("/auth/logout", {}, { withCredentials: true });
+const UserSidebar = () => {
+  const navigate = useNavigate();
+  const logout = useLogout();
 
-    if (res.status === 200) {
+  const handleLogout = async () => {
+    try {
+      await logout();
       toast.success("Logged out successfully!");
-      localStorage.removeItem("user");
-      window.location.href = "/login"; // redirect
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast.error("Logout failed. Try again.");
+      console.error(error);
     }
-  } catch (err) {
-    toast.error("Logout failed. Try again.");
-    console.error(err);
-  }
-};
+  };
 
-const UserSidebar = ()=> {
   return (
-    <>
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-teal-100 min-h-screen shadow-sm">
-        <nav className="p-4 space-y-2">
-          <a href='/dashboard'>
-          <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white 
-          cursor-pointer shadow-lg transform hover:scale-105 transition-all duration-200">
+    <aside className="w-64 bg-white border-r border-teal-100 min-h-screen shadow-sm">
+      <nav className="p-4 space-y-2">
+        <a href="/dashboard">
+          <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white cursor-pointer shadow-lg transform hover:scale-105 transition-all duration-200">
             <BarChart3 className="w-5 h-5" />
             <span className="font-medium">Dashboard</span>
           </div>
-          </a>
-          
-          <a href="/books" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg">
-            <BookOpen className="w-5 h-5" />
-            <span>View Books</span>
-          </a>
-          
-          <a href="/searchbook" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg">
-            <Search className="w-5 h-5" />
-            <span>Search Books</span>
-          </a>
-          
-          <a href="/requestbook" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg">
-            <Plus className="w-5 h-5" />
-            <span>Request Book</span>
-          </a>
-          
-          <a href="/returnbook" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg">
-            <RotateCcw className="w-5 h-5" />
-            <span>Return Book</span>
-          </a>
-          
-          <a href="/profile" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg">
-            <User className="w-5 h-5" />
-            <span>My Profile</span>
-          </a>
-          
-          <a href="/finepayments" className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg">
-            <Wallet className="w-5 h-5" />
-            <span>Pay Fines</span>
-          </a>
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg mt-8 transition-all duration-200"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </button>
-        </nav>
-      </aside>
-    </>
+        </a>
+
+        <a
+          href="/books"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <BookOpen className="w-5 h-5" />
+          <span>View Books</span>
+        </a>
+
+        <a
+          href="/searchbook"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <Search className="w-5 h-5" />
+          <span>Search Books</span>
+        </a>
+
+        <a
+          href="/requestbook"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Request Book</span>
+        </a>
+
+        <a
+          href="/returnbook"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <RotateCcw className="w-5 h-5" />
+          <span>Return Book</span>
+        </a>
+
+        <a
+          href="/profile"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <User className="w-5 h-5" />
+          <span>My Profile</span>
+        </a>
+
+        <a
+          href="/finepayments"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <Wallet className="w-5 h-5" />
+          <span>Pay Fines</span>
+        </a>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg mt-8 transition-all duration-200"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Logout</span>
+        </button>
+      </nav>
+    </aside>
   );
-}
+};
 
 const UserLayout = () => {
   return (
@@ -239,7 +227,7 @@ const UserLayout = () => {
       <UserHeader />
       <div className="flex font-inter bg-gray-50">
         <UserSidebar />
-        <Outlet /> {/* This is where the child route component will render */}
+        <Outlet />
       </div>
       <Footer />
     </div>

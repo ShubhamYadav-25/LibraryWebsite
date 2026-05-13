@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { IssuedBookCard } from '../components/UIcomponents'; 
 import PaymentHandler from '../components/PaymentHandler';
 import api from '../api/axiosInstance';
+import { useAuth } from '../context/AuthProvider';
 import { toast } from "react-toastify";
 import { 
   RotateCcw, 
@@ -11,10 +12,9 @@ import {
 
 
 // Return Book Form Component
-const ReturnBookForm = ({ selectedBook, onReturn, onCancel}) => {
+const ReturnBookForm = ({ selectedBook, onReturn, onCancel, studentId }) => {
   const returnDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
   if (!selectedBook) return null;
-  const studentId = localStorage.getItem("ID");
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
@@ -136,6 +136,7 @@ const ReturnBookForm = ({ selectedBook, onReturn, onCancel}) => {
 
 // Main Return Books Page Component
 const ReturnBooksPage = () => {
+  const { user } = useAuth();
   const [selectedBook, setSelectedBook] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterOption, setFilterOption] = useState('All Books');
@@ -191,8 +192,8 @@ const ReturnBooksPage = () => {
 
   // If the currently selected book is filtered out, clear the selection
   useEffect(() => {
-    const selectedId = selectedBook?.id || selectedBook?._id;
-    if (selectedId && !filteredIssuedBooks.some((b) => (b.id || b._id) === selectedId)) {
+    const selectedId = selectedBook?.id;
+    if (selectedId && !filteredIssuedBooks.some((b) => b.id === selectedId)) {
       setSelectedBook(null);
     }
   }, [filteredIssuedBooks, selectedBook]);
@@ -220,7 +221,7 @@ const ReturnBooksPage = () => {
 
   const handleReturn = async (e) => {
     try {
-      const response = await api.post(`/books/${selectedBook.id}/return`, { book: selectedBook }, { withCredentials: true });
+      const response = await api.patch(`/books/${selectedBook.id}/returns`, { ...selectedBook }, { withCredentials: true });
       
       if (response.status === 200) {
       toast.success(response.data.message);
@@ -321,6 +322,7 @@ const ReturnBooksPage = () => {
                 selectedBook={selectedBook}
                 onReturn={handleReturn}
                 onCancel={handleCancel}
+                studentId={user?.studentId || ""}
                 penalty={selectedBook?.penalty?.amount || 0}
                 days={selectedBook?.penalty?.days || 0}
               />

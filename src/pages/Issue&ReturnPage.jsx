@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../api/axiosInstance.js';
 import { 
   BookOpen, 
@@ -273,37 +273,41 @@ const IssueReturnPage = () => {
   const itemsPerPage = 7;
 
   /* -------------------- API -------------------- */
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let url = '';
-        let params = {
-          page,
-          limit: itemsPerPage,
-          search
-        };
+  const fetchData = useCallback(async (overrides = {}) => {
+    const currentTab = overrides.activeTab ?? activeTab;
+    const currentPage = overrides.page ?? page;
+    const currentSearch = overrides.search ?? search;
 
-        if (activeTab === 'ISSUE_REQUESTS') {
-          url = '/admin/requests?mode=active';
-        } else {
-          url = '/admin/transactions';
-          params.status = activeTab === 'ACTIVE'? 'active':'passive';
-        }
+    try {
+      let url = '';
+      let params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: currentSearch
+      };
 
-        const res = await api.get(url, {
-          params,
-          withCredentials: true
-        });
-
-        setData(res.data.data || []);
-        setTotal(res.data.total || 0);
-      } catch (err) {
-        console.error(`Error fetching ${activeTab}:`, err);
+      if (currentTab === 'ISSUE_REQUESTS') {
+        url = '/admin/requests?mode=active';
+      } else {
+        url = '/admin/transactions';
+        params.status = currentTab === 'ACTIVE' ? 'active' : 'passive';
       }
-    };
 
-    fetchData();
+      const res = await api.get(url, {
+        params,
+        withCredentials: true
+      });
+
+      setData(res.data.data || []);
+      setTotal(res.data.total || 0);
+    } catch (err) {
+      console.error(`Error fetching ${currentTab}:`, err);
+    }
   }, [activeTab, page, search]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   /* -------------------- Handlers -------------------- */
 
@@ -318,9 +322,10 @@ const IssueReturnPage = () => {
       if (res.status === 200) {
         toast.success('Issue approved successfully');
       }
-      // Refresh data
       setPage(1);
+      await fetchData({ page: 1 });
     } catch (err) {
+      toast.error(err || 'Error approving issue');
       console.error('Error approving issue:', err);
     }
   };
@@ -335,9 +340,10 @@ const IssueReturnPage = () => {
       if (res.status === 200) {
         toast.success('Request rejected successfully');
       }
-      // Refresh data
       setPage(1);
+      await fetchData({ page: 1 });
     } catch (err) {
+      toast.error(err || 'Error rejecting request');
       console.error('Error rejecting request:', err);
     }
   };

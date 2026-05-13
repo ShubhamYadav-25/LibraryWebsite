@@ -1,70 +1,91 @@
 import axios from "axios";
 
-// ✅ Axios instance
 const api = axios.create({
   baseURL: "http://localhost:5000/api/v1",
   withCredentials: true,
 });
 
-// 🔁 Refresh control
 let isRefreshing = false;
 let failedQueue = [];
+let authSessionHandlers = {
+  onRefreshFailure: null,
+};
+
+export const setAuthSessionHandlers = (handlers = {}) => {
+  authSessionHandlers = {
+    ...authSessionHandlers,
+    ...handlers,
+  };
+};
 
 const processQueue = (error) => {
-  failedQueue.forEach((p) => {
-    if (error) p.reject(error);
-    else p.resolve();
+  failedQueue.forEach((request) => {
+    if (error) {
+      request.reject(error);
+      return;
+    }
+
+    request.resolve(api(request.config));
   });
+
   failedQueue = [];
 };
 
-// ✅ RESPONSE INTERCEPTOR
 api.interceptors.response.use(
   (response) => response,
-
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({
-            resolve: () => resolve(api(originalRequest)),
-            reject,
-          });
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // 🔁 Refresh token
-        await axios.post(
-          "http://localhost:5000/api/refresh-token",
-          {},
-          { withCredentials: true }
-        );
-
-        processQueue(null);
-
-        return api(originalRequest); // retry original request
-
-      } catch (err) {
-        processQueue(err);
-
-        // ❌ logout fallback
-        window.location.href = "/login";
-
-        return Promise.reject(err);
-
-      } finally {
-        isRefreshing = false;
-      }
+    if (!originalRequest) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    const shouldSkipRefresh =
+      originalRequest._retry ||
+      originalRequest.skipAuthRefresh ||
+      originalRequest.url?.includes("/auth/refresh");
+
+    if (status !== 401 || shouldSkipRefresh) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({
+          config: originalRequest,
+          reject,
+          resolve,
+        });
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      await api.post(
+        "/auth/refresh",
+        {},
+        {
+          withCredentials: true,
+          skipAuthRefresh: true,
+        }
+      );
+
+      processQueue(null);
+      return api(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError);
+
+      if (typeof authSessionHandlers.onRefreshFailure === "function") {
+        await authSessionHandlers.onRefreshFailure(refreshError);
+      }
+
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
   }
 );
 

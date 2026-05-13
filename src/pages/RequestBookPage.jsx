@@ -10,10 +10,13 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { Button, FormInput } from "../components/UIcomponents";
+import { useAuth } from "../context/AuthProvider";
+import { useEffect } from "react";
 
 
 const RequestBookPage = () => {
-  const studentId = localStorage.getItem("ID");
+  const { user } = useAuth();
+  const studentId = user?.studentId || "";
   const today = new Date().toISOString().split("T")[0];
   const CLOUD_NAME = "dirsttw39";
 
@@ -31,6 +34,13 @@ const RequestBookPage = () => {
   };
 
   const { formData, handleInputChange, setFormData } = useBookForm(defaultData);
+
+  useEffect(() => {
+    setFormData((current) => ({
+      ...current,
+      studentId,
+    }));
+  }, [setFormData, studentId]);
 
   const handleDueDate = (e) => {
     const newIssueDate = e.target.value;

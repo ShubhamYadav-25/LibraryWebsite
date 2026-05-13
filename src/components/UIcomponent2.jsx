@@ -53,7 +53,7 @@ export const ActivityItem = ({ name, book_title, time, activity_status }) => (
   </div>
 );
 
-export const PopularBookItem = ({ title, author, rating = 0, issues = 0, image }) => (
+export const PopularBookItem = ({ title, author, rating = 0, timesIssued = 0, image }) => (
   <div className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
     <div className="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
       <img
@@ -79,7 +79,7 @@ export const PopularBookItem = ({ title, author, rating = 0, issues = 0, image }
     </div>
 
     <div className="text-right min-w-[68px]">
-      <p className="text-2xl font-bold text-gray-900">{issues}</p>
+      <p className="text-2xl font-bold text-gray-900">{timesIssued}</p>
       <p className="text-xs text-gray-600">issues</p>
     </div>
   </div>

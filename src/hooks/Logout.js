@@ -1,11 +1,12 @@
-import api from "../api/axiosInstance";
+import { useCallback } from "react";
 import { useAuth } from "../context/AuthProvider";
 
-const { setIsAuth } = useAuth();
+const useLogout = () => {
+  const { logout } = useAuth();
 
-const handleLogout = async () => {
-  await api.post("/logout");
-  setIsAuth(false);
+  return useCallback(async () => {
+    await logout();
+  }, [logout]);
 };
 
-export default handleLogout;
+export default useLogout;
