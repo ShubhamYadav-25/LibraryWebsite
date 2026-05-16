@@ -36,26 +36,26 @@ const Dashboard = () => {
           if (selectedGenre && selectedGenre !== 'All Genres') params.genre = selectedGenre;
         }
 
-        // Add timeout to prevent hanging
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('API call timeout')), 10000)
-        );
-
-        const apiCalls = await Promise.all([
+        const results = await Promise.allSettled([
           api.get('/books', { params, withCredentials: true }),
           api.get('/users/me/stats', { withCredentials: true }),
           api.get('/users/me/activities', { withCredentials: true }),
         ]);
 
-        const [booksRes, statsRes, activityRes] = await Promise.race([apiCalls, timeoutPromise]);
+        const [booksResult, statsResult, activityResult] = results;
+        const booksRes = booksResult.status === 'fulfilled' ? booksResult.value : null;
+        const statsRes = statsResult.status === 'fulfilled' ? statsResult.value : null;
+        const activityRes = activityResult.status === 'fulfilled' ? activityResult.value : null;
 
 
-        if (booksRes.status === 200) {
+        if (booksRes?.status === 200) {
           const returned = booksRes.data.books || [];
           setBooks(returned);
+        } else {
+          setBooks([]);
         }
 
-        if (statsRes.status === 200) {
+        if (statsRes?.status === 200) {
           const data = statsRes.data;
           setStats([
             { id: 0, label: 'Books Available', value: data.availableBooks, icon: BookOpen, color: 'bg-white', bgColor: 'bg-teal-500' },
@@ -63,13 +63,21 @@ const Dashboard = () => {
             { id: 2, label: 'Overdue Books', value: data.overdueBooks, icon: AlertTriangle, color: 'bg-white', bgColor: 'bg-orange-500' },
             { id: 3, label: 'Active Requests', value: data.requestedBooks, icon: Clock, color: 'bg-white', bgColor: 'bg-purple-500' },
           ]);
+        } else {
+          setStats([
+            { id: 0, label: 'Books Available', value: 0, icon: BookOpen, color: 'bg-white', bgColor: 'bg-teal-500' },
+            { id: 1, label: 'Books Issued', value: 0, icon: Bookmark, color: 'bg-white', bgColor: 'bg-blue-500' },
+            { id: 2, label: 'Overdue Books', value: 0, icon: AlertTriangle, color: 'bg-white', bgColor: 'bg-orange-500' },
+            { id: 3, label: 'Active Requests', value: 0, icon: Clock, color: 'bg-white', bgColor: 'bg-purple-500' },
+          ]);
         }
 
-        if (activityRes.status === 200 && activityRes.data?.activities) {
+        if (activityRes?.status === 200 && activityRes.data?.activities) {
           const mapped = mapActivities(activityRes.data.activities || []);
           setRecentActivity(mapped);
+        } else {
+          setRecentActivity([]);
         }
-
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         // Set some default data to prevent infinite loading

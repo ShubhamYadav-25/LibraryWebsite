@@ -1,303 +1,282 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../api/axiosInstance.js";
 import AuthLoading from "../components/AuthLoading.jsx";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
+import AuthShell from "../components/auth/AuthShell.jsx";
+import GoogleSignInButton from "../components/auth/GoogleSignInButton.jsx";
 import { useAuth } from "../context/AuthProvider.jsx";
+import {
+  getAuthErrorMessage,
+  getDefaultAuthErrorMessage,
+  getUserHomeRoute,
+  isStaffRole,
+  isVerificationRelatedError,
+  trimFormValues,
+} from "../utils/auth.js";
 
-const getCSRFToken = async () => {
-  const response = await api.get("/auth/csrf-token", {
-    withCredentials: true,
-  });
-
-  if (response.status !== 200) {
-    throw new Error("Failed to get CSRF token");
-  }
-
-  return response.data.csrfToken;
+const initialState = {
+  email: "",
+  password: "",
 };
 
-export default function AuthPage() {
+const roleOptions = [
+  { value: "Student", label: "Student" },
+  { value: "Admin", label: "Admin" },
+  { value: "Librarian", label: "Librarian" },
+  { value: "Staff", label: "Staff" },
+];
+
+const validateLoginForm = ({ email, password }) => {
+  const errors = {};
+
+  if (!email) {
+    errors.email = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = "Enter a valid email address.";
+  }
+
+  if (!password) {
+    errors.password = "Password is required.";
+  }
+
+  return errors;
+};
+
+export default function LoginPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { authLoading, isAuth, login, user } = useAuth();
+  const location = useLocation();
+  const { authLoading, isAuth, isStudent, login, loginWithGoogle, user } = useAuth();
 
-  const initialMode =
-    searchParams.get("mode") === "register" ? "register" : "login";
-  const initialRole = searchParams.get("role") || "user";
+  const [formData, setFormData] = useState(initialState);
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("Student");
 
-  const [mode, setMode] = useState(initialMode);
-  const [role, setRole] = useState(initialRole);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const redirectTarget = useMemo(() => {
+    if (isStaffRole(user)) {
+      return "/admindashboard";
+    }
+
+    if (isStudent) {
+      return "/dashboard";
+    }
+
+    return "/dashboard";
+  }, [isStudent, user]);
 
   useEffect(() => {
-    const nextMode = searchParams.get("mode");
-    const nextRole = searchParams.get("role");
-
-    if (nextMode === "login" || nextMode === "register") {
-      setMode(nextMode);
+    const emailFromState = location.state?.email;
+    if (emailFromState) {
+      setFormData((current) => ({
+        ...current,
+        email: emailFromState,
+      }));
     }
+  }, [location.state]);
 
-    if (nextRole === "user" || nextRole === "admin") {
-      setRole(nextRole);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (authLoading || !isAuth) {
-      return;
-    }
-
-    navigate(user?.studentId ? "/dashboard" : "/admindashboard", {
-      replace: true,
-    });
-  }, [authLoading, isAuth, navigate, user]);
-
-  if (loading) {
+  if (authLoading || isAuth === null) {
     return <AuthLoading />;
   }
 
+  if (isAuth) {
+    return <Navigate to={redirectTarget} replace />;
+  }
+
   const handleChange = (event) => {
+    const { name, value } = event.target;
+
     setFormData((current) => ({
       ...current,
-      [event.target.name]: event.target.value,
+      [name]: value,
     }));
+
+    setErrors((current) => ({
+      ...current,
+      [name]: "",
+    }));
+    setSubmitError("");
   };
 
-  const handleLogin = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setLoading(true);
+
+    const sanitized = trimFormValues(formData);
+    const nextErrors = validateLoginForm(sanitized);
+
+    setErrors(nextErrors);
+    setSubmitError("");
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      if (!formData.email || !formData.password) {
-        throw new Error("Missing credentials");
-      }
-
-      const csrfToken = await getCSRFToken();
-      const user = await login({
-        csrfToken,
-        email: formData.email,
-        password: formData.password,
-        role,
+      const currentUser = await login({
+        email: sanitized.email,
+        password: sanitized.password,
+        role: selectedRole,
       });
 
-      navigate(user.studentId ? "/dashboard" : "/admindashboard");
+      toast.success("Signed in successfully.");
+      navigate(getUserHomeRoute(currentUser), {
+        replace: true,
+      });
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message || "Login failed");
+      const status = error?.response?.status;
+      const fallbackMessage =
+        status === 429
+          ? getAuthErrorMessage(error, "Too many attempts. Please try again later.")
+          : isVerificationRelatedError(error)
+            ? "Your account needs email verification before you can sign in."
+            : getDefaultAuthErrorMessage();
+      const message = status === 429 ? fallbackMessage : fallbackMessage;
+
+      setSubmitError(message);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
-    setLoading(true);
+  const handleGoogleCredential = async (idToken) => {
+    setSubmitError("");
+    setIsGoogleSubmitting(true);
 
     try {
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error("Passwords do not match");
-      }
-
-      const csrfToken = await getCSRFToken();
-      const response = await api.post(
-        "/auth/register",
-        {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          role: "Student",
-        },
-        {
-          headers: {
-            "X-CSRF-Token": csrfToken,
-          },
-          withCredentials: true,
-        }
-      );
-
-      if (response.status !== 201) {
-        throw new Error("Registration failed");
-      }
-
-      toast.success(`${role} account created successfully`);
-
-      const newMode = "login";
-      setMode(newMode);
-      navigate(`/auth?mode=${newMode}&role=${role}`);
+      const currentUser = await loginWithGoogle({
+        idToken,
+        role: selectedRole,
+      });
+      toast.success("Signed in with Google.");
+      navigate(getUserHomeRoute(currentUser), {
+        replace: true,
+      });
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || error.message || "Registration failed"
-      );
+      setSubmitError(getAuthErrorMessage(error, "Google sign-in failed. Please try again."));
     } finally {
-      setLoading(false);
+      setIsGoogleSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      <div className="flex min-h-[90vh]">
-        <div className="hidden lg:flex w-1/2 bg-white items-center justify-center p-12">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">
-              Your Smart Digital <span className="text-teal-500">Library</span>
-            </h1>
-            <p className="mt-4 text-gray-600 max-w-md">
-              Manage books, students, and borrowing seamlessly with a modern
-              system.
-            </p>
-
-            <img
-              src="/library.jpg"
-              alt="Library"
-              className="mt-6 rounded-xl shadow-md"
-            />
-          </div>
+    <AuthShell
+      eyebrow="Welcome Back"
+      title="Sign in to your library account"
+      subtitle="Use your email and password or continue with Google."
+      sideTitle="Secure access for students and library staff"
+      sideCopy="The new authentication flow uses HTTP-only cookies, refresh rotation, email verification, and provider-aware sign-in so sessions stay safer without asking the frontend to store tokens."
+    >
+      <div className="space-y-2">
+        <div className="mb-3">
+          <label
+            htmlFor="login-role"
+            className="text-sm font-bold uppercase tracking-[0.1em] text-slate-500"
+          >
+            Login as
+          </label>
+          <select
+            id="login-role"
+            value={selectedRole}
+            onChange={(event) => setSelectedRole(event.target.value)}
+            disabled={isSubmitting || isGoogleSubmitting}
+            className="flex w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+          >
+            {roleOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="flex w-full lg:w-1/2 items-center justify-center px-6">
-          <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-            <div className="flex justify-center gap-3 mb-6">
-              {["user", "admin"].map((nextRole) => (
-                <button
-                  key={nextRole}
-                  disabled={loading}
-                  onClick={() => {
-                    setRole(nextRole);
-                    navigate(`/auth?mode=${mode}&role=${nextRole}`);
-                  }}
-                  className={`px-4 py-1 rounded-full text-sm font-medium transition ${
-                    role === nextRole
-                      ? "bg-teal-500 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {nextRole.toUpperCase()}
-                </button>
-              ))}
+        <GoogleSignInButton
+          busy={isGoogleSubmitting}
+          disabled={isSubmitting}
+          onCredential={handleGoogleCredential}
+        />
+
+        <div className="flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          or use email
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div >
+            <div className="mb-1 flex items-center justify-between">
+            <label htmlFor="email" className="mb-1 block text-md font-semibold text-slate-700 pl-1">
+              Email address
+            </label>
             </div>
-
-            <h2 className="text-2xl font-bold text-center">
-              {mode === "login" ? "Welcome Back" : "Create Account"}
-            </h2>
-
-            <p className="text-center text-gray-500 text-sm mb-6">
-              {mode === "login" ? `Login as ${role}` : `Register as ${role}`}
-            </p>
-
-            {loading ? (
-              <AuthLoading />
-            ) : (
-              <form
-                onSubmit={mode === "login" ? handleLogin : handleRegister}
-                className="flex flex-col gap-4"
-              >
-                {mode === "register" && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      name="firstName"
-                      placeholder="First Name"
-                      onChange={handleChange}
-                      required
-                      className="border p-2 rounded-md"
-                    />
-                    <input
-                      name="lastName"
-                      placeholder="Last Name"
-                      onChange={handleChange}
-                      required
-                      className="border p-2 rounded-md"
-                    />
-                  </div>
-                )}
-
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="Email"
-                  onChange={handleChange}
-                  required
-                  autoComplete="email"
-                  className="border p-2 rounded-md"
-                />
-
-                <input
-                  name="password"
-                  type="password"
-                  placeholder="Password"
-                  onChange={handleChange}
-                  required
-                  autoComplete="new-password"
-                  className="border p-2 rounded-md"
-                />
-
-                {mode === "register" && (
-                  <input
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="Confirm Password"
-                    onChange={handleChange}
-                    required
-                    autoComplete="new-password"
-                    className="border p-2 rounded-md"
-                  />
-                )}
-
-                {mode === "register" && (
-                  <div className="flex items-center text-sm">
-                    <input type="checkbox" required className="mr-2" />
-                    <span>I agree to Terms & Conditions</span>
-                  </div>
-                )}
-
-                <button
-                  disabled={loading}
-                  className={`py-2 rounded-md text-white transition ${
-                    loading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-teal-500 hover:bg-teal-600"
-                  }`}
-                >
-                  {loading
-                    ? "Please wait..."
-                    : mode === "login"
-                      ? "Sign In"
-                      : "Create Account"}
-                </button>
-              </form>
-            )}
-
-            <p className="text-center text-sm mt-6 text-gray-600">
-              {mode === "login"
-                ? "Don't have an account?"
-                : "Already have an account?"}
-              <span
-                onClick={() => {
-                  const nextMode = mode === "login" ? "register" : "login";
-                  setMode(nextMode);
-                  navigate(`/auth?mode=${nextMode}&role=${role}`);
-                }}
-                className="text-teal-500 cursor-pointer ml-1 font-medium"
-              >
-                {mode === "login" ? "Register" : "Login"}
-              </span>
-            </p>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="email"
+              disabled={isSubmitting || isGoogleSubmitting}
+              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+              placeholder="you@example.com"
+            />
+            {errors.email ? <p className="mt-2 text-sm text-rose-600">{errors.email}</p> : null}
           </div>
-        </div>
-      </div>
 
-      <Footer />
-    </div>
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label htmlFor="password" className="block text-md font-semibold text-slate-700 pl-1">
+                Password
+              </label>
+            </div>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+              disabled={isSubmitting || isGoogleSubmitting}
+              className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:bg-slate-100"
+              placeholder="Enter your password"
+            />
+            {errors.password ? <p className="mt-2 text-sm text-rose-600">{errors.password}</p> : null}
+          </div>
+
+          {submitError ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p>{submitError}</p>
+              <p className="mt-2">
+                Need a new verification email?{" "}
+                <Link
+                  to="/resend-verification"
+                  state={{ email: formData.email.trim() }}
+                  className="font-semibold text-emerald-700 hover:text-emerald-800"
+                >
+                  Request one here.
+                </Link>
+              </p>
+            </div>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={isSubmitting || isGoogleSubmitting}
+            className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          >
+            {isSubmitting ? "Signing you in..." : "Sign in"}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-slate-600">
+          Don&apos;t have an account?{" "}
+          <Link to="/signup" className="font-semibold text-emerald-700 hover:text-emerald-800">
+            Create one
+          </Link>
+        </p>
+      </div>
+    </AuthShell>
   );
 }

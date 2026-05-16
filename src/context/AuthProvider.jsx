@@ -1,151 +1,259 @@
+/* eslint-disable react-refresh/only-export-components */
+
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
-import api, { setAuthSessionHandlers } from "../api/axiosInstance";
 
-const AuthContext = createContext();
+import { setAuthSessionHandlers } from "../api/axiosInstance";
 
-const createAdminIdentity = () => ({
-  id: "admin-session",
-  role: "admin",
-  name: "Administrator",
-});
+import {
+  fetchCurrentUserRequest,
+  googleLoginRequest,
+  loginRequest,
+  logoutRequest,
+} from "../api/auth";
 
-const normalizeUser = (data, fallbackRole) => {
-  if (!data || typeof data !== "object") {
-    return fallbackRole === "admin" ? createAdminIdentity() : null;
-  }
+import {
+  getUserRole,
+  isStaffRole,
+  isStudentUser,
+  normalizeUser,
+} from "../utils/auth";
 
-  if (data.studentId || data.student_id) {
-    return data;
-  }
+const AuthContext = createContext(null);
 
-  if (String(data.role || "").toLowerCase() === "admin" || fallbackRole === "admin") {
-    return {
-      ...createAdminIdentity(),
-      ...data,
-      role: "admin",
-      name: data.name || data.fullName || "Administrator",
-    };
-  }
-
-  return data;
+/**
+ * Auth Status Enum
+ */
+const AUTH_STATUS = {
+  LOADING: "loading",
+  AUTHENTICATED: "authenticated",
+  UNAUTHENTICATED: "unauthenticated",
 };
 
 export const AuthProvider = ({ children }) => {
-  const [isAuth, setIsAuth] = useState(null);
+  /**
+   * Core State
+   */
+  const [authStatus, setAuthStatus] = useState(AUTH_STATUS.LOADING);
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
-  const clearAuth = useCallback(() => {
-    setIsAuth(false);
-    setUser(null);
+  /**
+   * Refs
+   */
+  const mountedRef = useRef(false);
+  const authRequestIdRef = useRef(0);
+
+  /**
+   * Cross-tab session sync
+   */
+  const broadcastChannelRef = useRef(null);
+
+  /**
+   * Helpers
+   */
+  const isAuth = authStatus === AUTH_STATUS.AUTHENTICATED;
+  const authLoading = authStatus === AUTH_STATUS.LOADING;
+
+  /**
+   * Safely update auth state
+   */
+  const applyAuthenticatedState = useCallback((nextUser) => {
+    if (!mountedRef.current) {
+      return;
+    }
+
+    setUser(nextUser);
+    setAuthStatus(AUTH_STATUS.AUTHENTICATED);
   }, []);
 
-  const loadCurrentUser = useCallback(async (fallbackRole) => {
-    try {
-      const response = await api.get("/users/me", {
-        withCredentials: true,
+  /**
+   * Clear auth state
+   */
+  const clearAuth = useCallback(() => {
+    if (!mountedRef.current) {
+      return;
+    }
+
+    setUser(null);
+    setAuthStatus(AUTH_STATUS.UNAUTHENTICATED);
+  }, []);
+
+  /**
+   * Load current user
+   */
+  const loadCurrentUser = useCallback(async () => {
+    const currentUser = await fetchCurrentUserRequest();
+    return normalizeUser(currentUser);
+  }, []);
+
+  /**
+   * Prevent stale async overwrites
+   */
+  const createRequestGuard = () => {
+    const requestId = ++authRequestIdRef.current;
+
+    return () =>
+      mountedRef.current && requestId === authRequestIdRef.current;
+  };
+
+  /**
+   * Establish authenticated session
+   */
+  const establishSession = useCallback(async () => {
+    const isLatestRequest = createRequestGuard();
+
+    const currentUser = await loadCurrentUser();
+
+    if (!isLatestRequest()) {
+      return null;
+    }
+
+    applyAuthenticatedState(currentUser);
+
+    return currentUser;
+  }, [applyAuthenticatedState, loadCurrentUser]);
+
+  /**
+   * Login
+   */
+  const login = useCallback(
+    async ({ email, password, role }) => {
+      const isLatestRequest = createRequestGuard();
+
+      const response = await loginRequest({
+        email,
+        password,
+        role,
       });
 
-      return normalizeUser(response.data, fallbackRole);
-    } catch (userError) {
-      if (userError.response?.status === 401) {
-        throw userError;
+      /**
+       * Prefer backend-returned user
+       */
+      const normalizedUser = normalizeUser(response?.user);
+
+      if (!isLatestRequest()) {
+        return null;
       }
 
-      try {
-        await api.get("/admin/stats", {
-          withCredentials: true,
-        });
+      applyAuthenticatedState(normalizedUser);
 
-        return createAdminIdentity();
-      } catch (adminError) {
-        throw adminError;
-      }
-    }
-  }, []);
-
-  const refreshSession = useCallback(
-    async (options = {}) => {
-      const { fallbackRole, updateLoading = false } = options;
-
-      if (updateLoading) {
-        setAuthLoading(true);
-      }
-
-      try {
-        await api.post(
-          "/auth/refresh",
-          {},
-          {
-            withCredentials: true,
-            skipAuthRefresh: true,
+      /**
+       * Optional hydration:
+       * Only fetch again if backend returns partial user
+       */
+      if (!normalizedUser?.email || !normalizedUser?.role) {
+        establishSession().catch((error) => {
+          if (import.meta.env.DEV) {
+            console.error("Session hydration failed:", error);
           }
-        );
-
-        const currentUser = await loadCurrentUser(fallbackRole);
-        setUser(currentUser);
-        setIsAuth(true);
-        return currentUser;
-      } catch (error) {
-        clearAuth();
-        throw error;
-      } finally {
-        if (updateLoading) {
-          setAuthLoading(false);
-        }
+        });
       }
+
+      /**
+       * Notify other tabs
+       */
+      broadcastChannelRef.current?.postMessage({
+        type: "AUTH_LOGIN",
+      });
+
+      return normalizedUser;
     },
-    [clearAuth, loadCurrentUser]
+    [applyAuthenticatedState, establishSession]
   );
 
-  const login = useCallback(
-    async ({ email, password, role, csrfToken }) => {
-      await api.post(
-        "/auth/login",
-        {
-          email,
-          password,
-          role,
-        },
-        {
-          headers: {
-            "X-CSRF-Token": csrfToken,
-          },
-          withCredentials: true,
-        }
-      );
+  /**
+   * Google Login
+   */
+  const loginWithGoogle = useCallback(
+    async ({ idToken, role }) => {
+      const isLatestRequest = createRequestGuard();
 
-      const currentUser = await loadCurrentUser(role);
-      setUser(currentUser);
-      setIsAuth(true);
-      return currentUser;
+      const response = await googleLoginRequest({
+        idToken,
+        role,
+      });
+
+      const normalizedUser = normalizeUser(response?.user);
+
+      if (!isLatestRequest()) {
+        return null;
+      }
+
+      applyAuthenticatedState(normalizedUser);
+
+      /**
+       * Optional hydration
+       */
+      if (!normalizedUser?.email || !normalizedUser?.role) {
+        establishSession().catch((error) => {
+          if (import.meta.env.DEV) {
+            console.error("Google session hydration failed:", error);
+          }
+        });
+      }
+
+      /**
+       * Notify other tabs
+       */
+      broadcastChannelRef.current?.postMessage({
+        type: "AUTH_LOGIN",
+      });
+
+      return normalizedUser;
     },
-    [loadCurrentUser]
+    [applyAuthenticatedState, establishSession]
   );
 
+  /**
+   * Logout
+   */
   const logout = useCallback(async () => {
+    /**
+     * Invalidate all pending auth requests
+     */
+    authRequestIdRef.current++;
+
     try {
-      await api.post(
-        "/auth/logout",
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      await logoutRequest();
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Logout failed:", error);
+      }
     } finally {
       clearAuth();
+
+      /**
+       * Notify other tabs
+       */
+      broadcastChannelRef.current?.postMessage({
+        type: "AUTH_LOGOUT",
+      });
     }
   }, [clearAuth]);
 
+  /**
+   * Axios refresh failure hook
+   */
   useEffect(() => {
+    const handleRefreshFailure = async () => {
+      authRequestIdRef.current++;
+
+      clearAuth();
+
+      broadcastChannelRef.current?.postMessage({
+        type: "AUTH_LOGOUT",
+      });
+    };
+
     setAuthSessionHandlers({
-      onRefreshFailure: clearAuth,
+      onRefreshFailure: handleRefreshFailure,
     });
 
     return () => {
@@ -155,48 +263,132 @@ export const AuthProvider = ({ children }) => {
     };
   }, [clearAuth]);
 
+  /**
+   * Bootstrap Auth
+   *
+   * IMPORTANT:
+   * Do NOT manually call refresh here.
+   * Axios interceptor already handles refresh logic.
+   */
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
     const bootstrapAuth = async () => {
-      setAuthLoading(true);
+      const isLatestRequest = createRequestGuard();
+
+      setAuthStatus(AUTH_STATUS.LOADING);
 
       try {
-        await refreshSession();
-      } catch (error) {
-        if (mounted) {
-          clearAuth();
+        const currentUser = await loadCurrentUser();
+
+        if (!isLatestRequest()) {
+          return;
         }
-      } finally {
-        if (mounted) {
-          setAuthLoading(false);
+
+        applyAuthenticatedState(currentUser);
+      } catch {
+        if (!isLatestRequest()) {
+          return;
         }
+
+        clearAuth();
       }
     };
 
     bootstrapAuth();
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
+
+      /**
+       * Cancel stale async updates
+       */
+      authRequestIdRef.current++;
     };
-  }, [clearAuth, refreshSession]);
+  }, [applyAuthenticatedState, clearAuth, loadCurrentUser]);
+
+  /**
+   * Cross-tab auth synchronization
+   */
+  useEffect(() => {
+    const channel = new BroadcastChannel("auth_channel");
+
+    broadcastChannelRef.current = channel;
+
+    channel.onmessage = (event) => {
+      const { type } = event.data || {};
+
+      /**
+       * Another tab logged out
+       */
+      if (type === "AUTH_LOGOUT") {
+        authRequestIdRef.current++;
+        clearAuth();
+      }
+
+      /**
+       * Another tab logged in
+       */
+      if (type === "AUTH_LOGIN") {
+        establishSession().catch(() => {});
+      }
+    };
+
+    return () => {
+      channel.close();
+    };
+  }, [clearAuth, establishSession]);
+
+  /**
+   * Context Value
+   */
+  const value = useMemo(
+    () => ({
+      authLoading,
+      authStatus,
+
+      isAuth,
+
+      isAdmin: getUserRole(user) === "admin",
+      isStaff: isStaffRole(user),
+      isStudent: isStudentUser(user),
+
+      user,
+
+      login,
+      loginWithGoogle,
+      logout,
+
+      clearAuth,
+    }),
+    [
+      authLoading,
+      authStatus,
+      isAuth,
+      user,
+      login,
+      loginWithGoogle,
+      logout,
+      clearAuth,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        authLoading,
-        clearAuth,
-        isAuth,
-        login,
-        logout,
-        refreshSession,
-        setUser,
-        user,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+/**
+ * Safe Auth Hook
+ */
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+
+  return context;
+};

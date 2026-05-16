@@ -17,12 +17,13 @@ import { recentActivities } from "../utils/mapactivity";
 import { toast } from "react-toastify";
 import ChangePasswordPopup  from '../components/ChangePassword.jsx';
 import { DefaultPopup } from "../components/DefaultPopup.jsx";
+import AuthLoading from "../components/AuthLoading.jsx";
 
 const ProfilePage = () => {
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
-    contact: "",
+    phone: "",
     department: "",
   });
   const [stats, setStats] = useState([]);
@@ -51,9 +52,8 @@ const ProfilePage = () => {
       ]);
 
       if (profileRes.status === 200) {
-        console.log(profileRes.data);
-        setProfileData(profileRes.data);
-        setOriginalProfile(profileRes.data);
+        setProfileData(profileRes.data.user);
+        setOriginalProfile(profileRes.data.user); // Store original data for change detection
       }
 
       if (statsRes.status === 200) {
@@ -82,8 +82,15 @@ const ProfilePage = () => {
 
       const changes = {};
       if (profileData.name !== originalProfile.name) changes.name = profileData.name;
-      if (profileData.contact !== originalProfile.contact) changes.contact = profileData.contact;
+      if (profileData.phone !== originalProfile.phone) changes.phone = profileData.phone;
       if (profileData.department !== originalProfile.department) changes.department = profileData.department;
+
+      console.log("Changes to save:", changes);
+
+      if (Object.keys(changes).length === 0) {
+        toast.info("No changes detected to save.");
+        return;
+      }
   
       const response = await api.put(
         `/users/me`,
@@ -115,17 +122,6 @@ const ProfilePage = () => {
     fetchProfile();
   }, []);
 
-  // 🔄 Animated Loading Component
-  const LoadingSpinner = () => (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 border-4 border-purple-300 rounded-full animate-ping"></div>
-        <div className="absolute inset-0 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-      <p className="mt-6 text-lg font-medium text-gray-700 animate-pulse">Loading your profile...</p>
-    </div>
-  );
-
   const handleSettingClick = (title) => {
     if (title === "Change Password") {
       setPopupType("changePassword");
@@ -136,8 +132,6 @@ const ProfilePage = () => {
       setIsPopupOpen(true);
     }
   };
-
-  if (loading) return <LoadingSpinner />;
 
   const initials =
     profileData.name
@@ -150,6 +144,10 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen w-full bg-gray-50 p-6">
+      {loading ? (
+            <AuthLoading />
+          ) : (
+            <>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 
@@ -227,7 +225,7 @@ const ProfilePage = () => {
                   <FormInput
                     label="Full Name"
                     value={profileData.name || ""}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    onChange={(e) => setProfileData((prev) => ({...prev, name: e.target.value,}))}
                   />
                   <FormInput
                     label="Email Address"
@@ -241,13 +239,14 @@ const ProfilePage = () => {
                   <FormInput
                     label="Phone Number"
                     value={profileData.phone || ""}
-                    onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                    onChange={(e) => setProfileData((prev) => ({...prev, phone: e.target.value,}))}
                   />
                   <FormSelect
                     label="Department"
                     value={profileData.department || ""}
-                    onChange={(e) => setProfileData({ ...profileData, department: e.target.value })}
+                    onChange={(e) => setProfileData((prev) => ({...prev, department: e.target.value,}))}
                     options={[
+                      { value: "", label: "Select Department" },
                       { value: "COMPUTER SCIENCE", label: "Computer Science" },
                       { value: "ELECTRICAL", label: "Electrical" },
                       { value: "MECHANICAL", label: "Mechanical" },
@@ -353,6 +352,8 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 };

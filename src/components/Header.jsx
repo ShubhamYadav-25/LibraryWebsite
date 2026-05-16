@@ -11,7 +11,7 @@ const Logo = () => (
   </div>
 );
 
-const NavigationLink = ({ id, label, isActive, onClick }) => (
+const NavigationLink = ({ label, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={`text-gray-600 hover:text-teal-600 font-medium transition-colors ${
@@ -24,10 +24,10 @@ const NavigationLink = ({ id, label, isActive, onClick }) => (
 
 const AuthButtons = () => (
   <>
-    <Link to="/auth?mode=login" className="text-gray-600 hover:text-gray-900 font-medium">
+    <Link to="/login" className="text-gray-600 hover:text-gray-900 font-medium">
       Sign In
     </Link>
-    <Link to="/auth?mode=register" className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+    <Link to="/signup" className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
       Get Started
     </Link>
   </>
@@ -80,7 +80,6 @@ export default function Header({ activeSection, scrollToSection }) {
               {navigationItems.map(({ id, label }) => (
                 <NavigationLink
                   key={id}
-                  id={id}
                   label={label}
                   isActive={activeSection === id}
                   onClick={() => scrollToSection(id)}

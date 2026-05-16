@@ -15,6 +15,8 @@ import ContactPage from "./pages/ContactPage.jsx";
 import Dashboard from "./pages/DashboardPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignUpPage from "./pages/SignupPage.jsx";
+import VerifyEmailPage from "./pages/VerifyEmailPage.jsx";
+import ResendVerificationPage from "./pages/ResendVerificationPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import RequestBookPage from "./pages/RequestBookPage.jsx";
 import BookDetailPage from "./pages/BookDetailPage.jsx";
@@ -28,6 +30,7 @@ import UsersPage from "./pages/UsersPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import SettingsPage from "./pages/Settings.jsx";
 import FinesPaymentsPage from "./pages/FinePaymentsPage.jsx";
+import { Navigate } from "react-router-dom";
 
 function App() {
   return (
@@ -38,14 +41,16 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/auth" element={<LoginPage />} />
+          <Route path="/auth" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/resend-verification" element={<ResendVerificationPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/about" element={<AboutPage />} />
 
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["student"]}>
                 <UserLayout />
               </ProtectedRoute>
             }
@@ -62,7 +67,7 @@ function App() {
 
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["admin", "librarian", "staff"]}>
                 <AdminLayout />
               </ProtectedRoute>
             }

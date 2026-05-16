@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Bell,
@@ -154,60 +154,60 @@ const UserSidebar = () => {
   return (
     <aside className="w-64 bg-white border-r border-teal-100 min-h-screen shadow-sm">
       <nav className="p-4 space-y-2">
-        <a href="/dashboard">
+        <Link to="/dashboard">
           <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 text-white cursor-pointer shadow-lg transform hover:scale-105 transition-all duration-200">
             <BarChart3 className="w-5 h-5" />
             <span className="font-medium">Dashboard</span>
           </div>
-        </a>
+        </Link>
 
-        <a
-          href="/books"
+        <Link
+          to="/books"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
         >
           <BookOpen className="w-5 h-5" />
           <span>View Books</span>
-        </a>
+        </Link>
 
-        <a
-          href="/searchbook"
+        <Link
+          to="/searchbook"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
         >
           <Search className="w-5 h-5" />
           <span>Search Books</span>
-        </a>
+        </Link>
 
-        <a
-          href="/requestbook"
+        <Link
+          to="/requestbook"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
         >
           <Plus className="w-5 h-5" />
           <span>Request Book</span>
-        </a>
+        </Link>
 
-        <a
-          href="/returnbook"
+        <Link
+          to="/returnbook"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
         >
           <RotateCcw className="w-5 h-5" />
           <span>Return Book</span>
-        </a>
+        </Link>
 
-        <a
-          href="/profile"
+        <Link
+          to="/profile"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
         >
           <User className="w-5 h-5" />
           <span>My Profile</span>
-        </a>
+        </Link>
 
-        <a
-          href="/finepayments"
+        <Link
+          to="/finepayments"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
         >
           <Wallet className="w-5 h-5" />
           <span>Pay Fines</span>
-        </a>
+        </Link>
 
         <button
           onClick={handleLogout}
