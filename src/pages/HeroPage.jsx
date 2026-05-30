@@ -35,7 +35,7 @@ export const HeroImage = () => (
   <div className="relative">
     <div className="aspect-[4/3] bg-gradient-to-br from-blue-100 to-teal-100 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl">
       <img 
-        src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+        src="https://res.cloudinary.com/dirsttw39/image/upload/v1780152617/libraryimage1_fyedjj.avif"
         alt="Modern Library"
         className="w-full h-full object-cover"
       />

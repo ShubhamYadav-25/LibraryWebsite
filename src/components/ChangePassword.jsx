@@ -17,8 +17,8 @@ const ChangePasswordPopup = ({ isOpen, onClose}) => {
         const response = await api.put(
         "/auth/password",
         {
-          currentpassword: currentPassword,
-          updatedpassword: newPassword,
+          currentPassword,
+          newPassword,
         },
         { withCredentials: true }
       );

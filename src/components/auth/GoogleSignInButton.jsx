@@ -45,7 +45,7 @@ const GoogleSignInButton = ({ disabled, busy, label = "Continue with Google", on
   };
 
   return (
-    <div className="m-2">
+    <div className="m-3">
       <button
         type="button"
         onClick={handleClick}

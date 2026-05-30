@@ -199,7 +199,6 @@ export const BookCard = ({ book, showActions = true }) => {
   const [isLiked, setIsLiked] = useState(book.isLiked || false);
   const [gradientClass] = useState(getRandomGradientClass());
   const navigate = useNavigate();
-  const CLOUD_NAME = "dirsttw39";
 
   // ✅ When "Request Book" is clicked, navigate with this book’s data
   const handleRequestClick = (e) => {
@@ -231,7 +230,7 @@ export const BookCard = ({ book, showActions = true }) => {
         <div className="aspect-[3/4] rounded-lg overflow-hidden flex items-center justify-center">
           {book.image ? (
             <img
-              src={book.image ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
+              src={book.image ? `https://res.cloudinary.com/dirsttw39/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
               alt={book.title}
               className="w-full h-full object-cover"
               loading="lazy"
@@ -407,7 +406,6 @@ export const IssuedBookCard = ({ book, isSelected, onSelect }) => {
   let status = null; 
   const dueDate = book.dueDate ? new Date(book.dueDate) : null;
   const today = new Date();
-  const CLOUD_NAME = "dirsttw39";
 
   today.setHours(0, 0, 0, 0);
 
@@ -443,7 +441,7 @@ export const IssuedBookCard = ({ book, isSelected, onSelect }) => {
     <div className="w-20 h-26 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
             {book.image ? (
             <img
-              src={book.image ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
+              src={book.image ? `https://res.cloudinary.com/dirsttw39/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
               alt={book.title}
               className="w-full h-full object-cover"
             />

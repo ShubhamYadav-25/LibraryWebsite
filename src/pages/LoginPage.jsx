@@ -166,11 +166,9 @@ export default function LoginPage() {
       eyebrow="Welcome Back"
       title="Sign in to your library account"
       subtitle="Use your email and password or continue with Google."
-      sideTitle="Secure access for students and library staff"
-      sideCopy="The new authentication flow uses HTTP-only cookies, refresh rotation, email verification, and provider-aware sign-in so sessions stay safer without asking the frontend to store tokens."
     >
       <div className="space-y-2">
-        <div className="mb-3">
+        <div className="ml-3 mr-3">
           <label
             htmlFor="login-role"
             className="text-sm font-bold uppercase tracking-[0.1em] text-slate-500"

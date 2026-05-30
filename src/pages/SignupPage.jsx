@@ -211,14 +211,12 @@ export default function SignUpPage() {
       eyebrow="Create Account"
       title="Join LibraryMS"
       subtitle="Create your student account, verify your email, and then sign in. We do not log users in automatically after signup anymore."
-      sideTitle="One signup, then one quick verification"
-      sideCopy="Accounts are now created in an unverified state first. That gives us cleaner email ownership checks and a safer path for local, Google, and hybrid authentication later on."
     >
-      <div className="space-y-6">
-        <div>
+      <div className="space-y-2">
+        <div className="mr-3 ml-3">
           <label
             htmlFor="signup-role"
-            className="mb-2 block text-sm font-semibold uppercase tracking-[0.18em] text-slate-500"
+            className="text-sm font-bold uppercase tracking-[0.1em] text-slate-500"
           >
             Choose role
           </label>
@@ -250,10 +248,10 @@ export default function SignUpPage() {
           <span className="h-px flex-1 bg-slate-200" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="firstName" className="mb-2 block text-sm font-semibold text-slate-700">
+              <label htmlFor="firstName" className="mb-1 block text-md font-semibold text-slate-700 pl-1">
                 First name
               </label>
               <input
@@ -268,7 +266,7 @@ export default function SignUpPage() {
               {errors.firstName ? <p className="mt-2 text-sm text-rose-600">{errors.firstName}</p> : null}
             </div>
             <div>
-              <label htmlFor="lastName" className="mb-2 block text-sm font-semibold text-slate-700">
+              <label htmlFor="lastName" className="mb-1 block text-md font-semibold text-slate-700 pl-1">
                 Last name
               </label>
               <input
@@ -285,7 +283,7 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-slate-700">
+            <label htmlFor="email" className="mb-1 block text-md font-semibold text-slate-700 pl-1">
               Email address
             </label>
             <input
@@ -303,7 +301,7 @@ export default function SignUpPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-semibold text-slate-700">
+              <label htmlFor="password" className="mb-1 block text-md font-semibold text-slate-700 pl-1">
                 Password
               </label>
               <input
@@ -319,7 +317,7 @@ export default function SignUpPage() {
               {errors.password ? <p className="mt-2 text-sm text-rose-600">{errors.password}</p> : null}
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-semibold text-slate-700">
+              <label htmlFor="confirmPassword" className="mb-1 block text-md font-semibold text-slate-700 pl-1">
                 Confirm password
               </label>
               <input
