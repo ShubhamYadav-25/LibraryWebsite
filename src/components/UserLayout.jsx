@@ -21,6 +21,7 @@ const UserHeader = () => {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const displayName = user?.name || "User";
@@ -124,12 +125,16 @@ const UserHeader = () => {
             )}
           </div>
 
-          <div className="flex border p-2 rounded-xl shadow border-teal-100 items-center space-x-2">
+          <button
+            type="button"
+            onClick={() => navigate("/profile")}
+            className="flex border p-2 rounded-xl shadow border-teal-100 items-center space-x-2 transition hover:bg-teal-50"
+          >
             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-medium">{initials}</span>
             </div>
             <span className="text-gray-700 font-medium">{displayName}</span>
-          </div>
+          </button>
         </div>
       </div>
     </header>

@@ -101,20 +101,55 @@ export const FormSelect = ({ label, value, onChange, options, required }) => (
 );
 
 // Enhanced Button Component
-export const Button = ({ children, onClick, variant = 'primary', type = 'button', className = '' }) => {
-  const baseClasses = "flex items-center justify-center gap-2 text-xl flex-1 py-3 px-6 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 font-semibold transition-all transform hover:scale-105";
+export const Button = ({
+  children,
+  onClick,
+  variant = "primary",
+  type = "button",
+  className = "",
+  disabled = false,
+}) => {
+  const baseClasses =
+    "flex items-center justify-center gap-2 text-xl flex-1 py-3 px-6 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 font-semibold transition-all duration-200";
+
   const variants = {
-    primary: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700",
-    secondary: "bg-gray-100 hover:bg-gray-200 text-gray-700 hover:shadow-md",
-    outline: "border border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-50 hover:shadow-md",
-    third: "border-2 border-indigo-200 cursor-pointer hover:bg-indigo-50 transition-all duration-200 font-medium text-indigo-700 bg-white/50 backdrop-blur-sm"
+    primary:
+      "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 hover:scale-105",
+
+    secondary:
+      "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md hover:scale-105",
+
+    outline:
+      "border border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md hover:scale-105",
+
+    third:
+      "border-2 border-indigo-200 text-indigo-700 bg-white/50 backdrop-blur-sm hover:bg-indigo-50 hover:scale-105",
+  };
+
+  const disabledStyles = {
+    primary:
+      "bg-gradient-to-r from-gray-400 to-gray-500 text-white opacity-70 cursor-not-allowed",
+
+    secondary:
+      "bg-gray-200 text-gray-500 opacity-70 cursor-not-allowed",
+
+    outline:
+      "border border-gray-200 text-gray-400 bg-gray-50 opacity-70 cursor-not-allowed",
+
+    third:
+      "border-2 border-gray-200 text-gray-400 bg-gray-100 opacity-70 cursor-not-allowed",
   };
 
   return (
     <button
       type={type}
-      onClick={onClick}
-      className={`${baseClasses} ${variants[variant]} ${className}`}
+      onClick={!disabled ? onClick : undefined}
+      disabled={disabled}
+      className={`
+        ${baseClasses}
+        ${disabled ? disabledStyles[variant] : variants[variant]}
+        ${className}
+      `}
     >
       {children}
     </button>

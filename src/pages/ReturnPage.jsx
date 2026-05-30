@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { IssuedBookCard } from '../components/UIcomponents'; 
 import PaymentHandler from '../components/PaymentHandler';
 import api from '../api/axiosInstance';
-import { useAuth } from '../context/AuthProvider';
 import { toast } from "react-toastify";
+import { Button, FormInput } from "../components/UIcomponents";
 import { 
   RotateCcw, 
   Search, 
@@ -12,9 +12,11 @@ import {
 
 
 // Return Book Form Component
-const ReturnBookForm = ({ selectedBook, onReturn, onCancel, studentId }) => {
+const ReturnBookForm = ({ selectedBook, onReturn, onCancel }) => {
   const returnDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
   if (!selectedBook) return null;
+  const [loading, setLoading] = useState(false);
+
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
@@ -47,19 +49,6 @@ const ReturnBookForm = ({ selectedBook, onReturn, onCancel, studentId }) => {
           <input
             type="text"
             value={selectedBook.title}
-            disabled
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-          />
-        </div>
-
-        {/* Student ID */}
-        <div className="pb-2">
-          <label className="pl-2 text-left block text-sm font-medium text-gray-700">
-            Student ID
-          </label>
-          <input
-            type="text"
-            value={studentId}
             disabled
             className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
           />
@@ -114,20 +103,20 @@ const ReturnBookForm = ({ selectedBook, onReturn, onCancel, studentId }) => {
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-4 pt-2">
-          <button 
+        <div className="flex space-x-4 pt-4">
+          <Button
             onClick={onReturn}
-            className="w-full py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center bg-purple-500 hover:bg-purple-600 text-white"
+            variant="primary"
+            disabled={loading}
           >
-            <CheckCircle className="w-5 h-5 mr-2" />
-            Return Book
-          </button>
-          <button 
+            {loading ? "Returning..." : "Return Book"}
+          </Button>
+          <Button
             onClick={onCancel}
-            className="w-full border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700 py-3 rounded-lg font-semibold transition-colors duration-200"
+            variant="secondary"
           >
             Cancel
-          </button>
+          </Button> 
         </div>
       </div>
     </div>
@@ -136,7 +125,6 @@ const ReturnBookForm = ({ selectedBook, onReturn, onCancel, studentId }) => {
 
 // Main Return Books Page Component
 const ReturnBooksPage = () => {
-  const { user } = useAuth();
   const [selectedBook, setSelectedBook] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterOption, setFilterOption] = useState('All Books');
@@ -252,9 +240,6 @@ const ReturnBooksPage = () => {
         {/* Page Header */}
         <div className="mb-8 flex flex-col items-center justify-center">
           <div className="flex items-center space-x-4 mb-3">
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-              <RotateCcw className="w-6 h-6 text-white" />
-            </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Return Books</h1>
               <p className="text-gray-600">Select a book from your issued collection to return it to the library</p>
@@ -322,7 +307,6 @@ const ReturnBooksPage = () => {
                 selectedBook={selectedBook}
                 onReturn={handleReturn}
                 onCancel={handleCancel}
-                studentId={user?.studentId || ""}
                 penalty={selectedBook?.penalty?.amount || 0}
                 days={selectedBook?.penalty?.days || 0}
               />

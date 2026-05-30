@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Button, FormInput } from "../components/UIcomponents";
 import { useAuth } from "../context/AuthProvider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 
 const RequestBookPage = () => {
@@ -19,6 +19,7 @@ const RequestBookPage = () => {
   const studentId = user?.studentId || "";
   const today = new Date().toISOString().split("T")[0];
   const CLOUD_NAME = "dirsttw39";
+  const [loading, setLoading] = useState(false);
 
 
   const defaultData = {
@@ -51,22 +52,38 @@ const RequestBookPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    // Prevent duplicate requests
+    if (loading) return;
+  
     try {
+      setLoading(true);
+  
       console.log(formData.book_id);
+  
       const res = await api.post(
         `/books/${formData.book_id}/requests`,
-        { formData },
+        formData,
         { withCredentials: true }
       );
-
-      if (res.status === 200) {
-        toast.success(res.data.message || "✅ Book request submitted successfully!");
-        // Reset the form
+  
+      if (res.status === 200 || res.status === 201) {
+        toast.success(
+          res.data.message || "✅ Book request submitted successfully!"
+        );
+  
+        // Reset form
         setFormData(defaultData);
       }
     } catch (error) {
       console.error("Error requesting book:", error);
-      toast.error("❌ Unable to request this book!");
+  
+      toast.error(
+        error?.response?.data?.message ||
+          "❌ Unable to request this book!"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,10 +205,15 @@ const RequestBookPage = () => {
               </div>
 
               <div className="flex space-x-4 pt-8">
-                <Button onClick={handleSubmit}
-                variant="primary" className="flex-1 w-full">
+                <Button
+                  onClick={handleSubmit}
+                  variant="primary"
+                  className="flex-1 w-full"
+                  disabled={loading}
+                >
                   <BookOpen className="w-5 h-5 mr-2" />
-                  Request Book
+                
+                  {loading ? "Requesting..." : "Request Book"}
                 </Button>
                 <Button onClick={() => setFormData(defaultData)}
                  variant="outline">

@@ -592,10 +592,14 @@ const BookDetailPage = () => {
             
             {/* Action Buttons */}
             <div className="space-y-3 mb-8">
-              <Button onClick={handleRequestClick} disabled={bookData.status === "Not Available"}
-                variant="primary" className="w-full flex-1">
-                  <BookOpen className="w-6 h-6" />
-                  Request Book
+              <Button
+                onClick={handleRequestClick}
+                disabled={bookData?.status === "Not Available"}
+                variant="primary"
+                className="w-full flex-1"
+              >
+                <BookOpen className="w-6 h-6" />
+                Request Book
               </Button>
               
               <div className="grid grid-cols-2 gap-3">
