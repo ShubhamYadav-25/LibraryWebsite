@@ -1,4 +1,4 @@
-
+import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import Footer from "./Footer.jsx";
 import { 
@@ -10,45 +10,129 @@ import {
   Settings,
   FileText,
   ArrowLeftRight,
+  LogOut,
+  XCircle,
 } from 'lucide-react';
+import { useAuth } from "../context/AuthProvider";
 
 
-const AdminHeader = () => (
+
+const AdminHeader = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const { user } = useAuth();
+
+  const displayName = user?.name || "Admin";
+  const initials = displayName
+    .split(" ")
+    .map((namePart) => namePart[0])
+    .join("")
+    .toUpperCase();
+
+  const fetchNotifications = async () => {
+      try {
+        setNotifications([]);
+      } catch (error) {
+        console.error("Error fetching notifications:", error.message);
+      }
+    };
+  
+    useEffect(() => {
+      fetchNotifications();
+    }, []);
+  
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setShowDropdown(false);
+        }
+      };
+  
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+  return(
   <header className="bg-white border-b border-gray-200 px-6 py-4">
     <div className="flex items-center justify-between">
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
           <BookOpen className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-blue-600">LibraryMS</h1>
-          <p className="text-xs text-gray-600">Management System</p>
+          <h1 className="text-2xl font-poppins font-bold bg-gradient-to-r from-teal-700 to-blue-700 bg-clip-text text-transparent">LibraryMS</h1>
         </div>
       </div>
       
       <div className="flex items-center space-x-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search books, authors, ISBN..."
-            className="pl-10 pr-4 py-2 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80"
-          />
-        </div>
         
-        <div className="relative">
-          <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-        </div>
+        <div
+            className="relative p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-xl transition-all duration-200"
+            ref={dropdownRef}
+          >
+            <button
+              className="relative focus:outline-none"
+              onClick={() => setShowDropdown((current) => !current)}
+            >
+              <Bell className="w-6 h-6 text-gray-600 hover:text-gray-800 transition-colors duration-200" />
+              {notifications.length > 0 && (
+                <span className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-3 w-80 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-800">
+                    Notifications
+                  </h3>
+                  <button
+                    onClick={() => setShowDropdown(false)}
+                    className="text-gray-400 hover:text-gray-600 transition pb-3"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-gray-500 text-sm">
+                    No new notifications
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                    {notifications.map((note, index) => (
+                      <li
+                        key={index}
+                        className="px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          {note.title || "Notification"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {note.message || note.body || "No message details"}
+                        </p>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          {note.time || "Just now"}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         
         <div className="flex items-center space-x-3">
-          <img 
-            src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=150&q=80"
-            alt="Admin"
-            className="w-10 h-10 rounded-full object-cover"
-          />
+          <div className="w-10 h-10 rounded-full overflow-hidden"> 
+            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+              {initials}
+            </div>
+          </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">Sarah Admin</p>
+            <p className="text-sm font-semibold text-gray-900">{displayName}</p>
             <p className="text-xs text-gray-600">Administrator</p>
           </div>
         </div>
@@ -56,6 +140,7 @@ const AdminHeader = () => (
     </div>
   </header>
 );
+};
 
 
 const AdminSidebar = ({ activeItem, setActiveItem }) => {
@@ -65,18 +150,12 @@ const AdminSidebar = ({ activeItem, setActiveItem }) => {
     { id: 'requests', icon: ArrowLeftRight, label: 'Issue & Return' },
     { id: 'users', icon: Users, label: 'Users' },
     { id: 'reports', icon: FileText, label: 'Reports' },
-    { id: 'settings', icon: Settings, label: 'Settings' }
+    { id: 'settings', icon: Settings, label: 'Settings' },
+    { id: 'logout', icon: LogOut, label: 'Logout', gradient: true }
   ];
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
-      <div className="mb-6">
-        <img 
-          src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=300&q=80"
-          alt="Library"
-          className="w-full h-32 object-cover rounded-xl"
-        />
-      </div>
       
       <nav className="space-y-2">
         {menuItems.map((item) => (
@@ -110,7 +189,7 @@ const AdminLayout = () => {
       <AdminHeader />
       <div className="flex font-inter bg-gray-50">
         <AdminSidebar />
-        <Outlet /> {/* This is where the child route component will render */}
+        <Outlet />
       </div>
       <Footer />
     </div>

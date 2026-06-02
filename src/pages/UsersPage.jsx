@@ -20,18 +20,15 @@ import {
 } from 'lucide-react';
 
 // Add/Edit User Modal Component
-const UserModal = ({ isOpen, onClose, user, onSave }) => {
+export const UserModal = ({ isOpen, onClose, user, onSave }) => {
   const [formData, setFormData] = useState(user || {
-    studentId: '',
     fullName: '',
     email: '',
     phone: '',
     department: '',
-    fine: 0,
     batch: '',
     address: '',
-    joinDate: new Date().toISOString().split('T')[0],
-    status: 'Active'
+    joinDate: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -39,16 +36,13 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
       setFormData(user);
     } else {
       setFormData({
-        studentId: '',
         fullName: '',
         email: '',
         phone: '',
         department: '',
-        fine: 0,
         batch: '',
         address: '',
-        joinDate: new Date().toISOString().split('T')[0],
-        status: 'Active'
+        joinDate: new Date().toISOString().split('T')[0]
       });
     }
   }, [user]);
@@ -74,20 +68,6 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
 
         <div className="p-6">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Student ID */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Student ID *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.studentId}
-                onChange={(e) => setFormData({...formData, studentId: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="STU001234"
-              />
-            </div>
 
             {/* Full Name */}
             <div>
@@ -172,22 +152,6 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
               </select>
             </div>
 
-            {/* Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-                <option>Suspended</option>
-              </select>
-            </div>
-
             {/* Registration Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -240,6 +204,16 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
 // User Details Modal Component
 const UserDetailsModal = ({ isOpen, onClose, user }) => {
   if (!isOpen || !user) return null;
+  const initials =
+    user.name
+      ? user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+      : "?";
+  
+    let  count_overdue = user.books ? user.books.filter(book => new Date(book.dueDate) < new Date()).length : 0;
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -254,7 +228,7 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
           {/* User Profile Section */}
           <div className="flex items-center space-x-6 mb-8 pb-8 border-b border-gray-200">
             <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-              {user.name.split(' ').map(n => n[0]).join('')}
+              {initials}
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-900">{user.name}</h3>
@@ -317,7 +291,7 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
                 <BookOpen className="w-5 h-5 text-gray-400" />
                 <div>
                   <p className="text-sm text-gray-600">Overdue Books</p>
-                  <p className="font-medium text-gray-900">{user.duebooks} books</p>
+                  <p className="font-medium text-gray-900">{count_overdue} books</p>
                 </div>
               </div>
             </div>
@@ -331,7 +305,7 @@ const UserDetailsModal = ({ isOpen, onClose, user }) => {
                 <div key={book.id || book.title} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">{book.title}</p>
-                    <p className="text-sm text-gray-600">{new Date(book.issueDate).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-600">issued on {new Date(book.issueDate).toLocaleDateString()}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     book.dueDate < new Date() ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
@@ -501,11 +475,17 @@ const UsersPage = () => {
   const handleViewUser = async (user) => {
     try {
       setSelectedUser(null); // Reset before fetching new data
-      const res = await api.get(
-        `/users/${user.studentId}`,
-        { withCredentials: true }
-      );
-      const userData = res.data;
+      const [userRes, booksRes] = await Promise.all([
+        api.get(`/users/${user.studentId}`, {
+          withCredentials: true,
+        }),
+        api.get(`/users/${user.studentId}/books`, {
+          withCredentials: true,
+        }),
+      ]);
+
+      let userData = userRes.data;
+      userData.books = booksRes.data || [];
       console.log('Fetched user:', userData);
       setSelectedUser(userData);
       setShowDetailsModal(true);
