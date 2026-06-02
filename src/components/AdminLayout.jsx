@@ -14,6 +14,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useAuth } from "../context/AuthProvider";
+import useLogout from "../hooks/Logout";
 
 
 
@@ -144,15 +145,26 @@ const AdminHeader = () => {
 
 
 const AdminSidebar = ({ activeItem, setActiveItem }) => {
+  const logout = useLogout();
   const menuItems = [
     { id: 'admindashboard', icon: BarChart3, label: 'Dashboard' },
     { id: 'catalog', icon: BookOpen, label: 'Book Catalog' },
     { id: 'requests', icon: ArrowLeftRight, label: 'Issue & Return' },
     { id: 'users', icon: Users, label: 'Users' },
     { id: 'reports', icon: FileText, label: 'Reports' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
-    { id: 'logout', icon: LogOut, label: 'Logout', gradient: true }
+    { id: 'settings', icon: Settings, label: 'Settings' }
   ];
+
+  const handleLogout = async () => {
+      try {
+        await logout();
+        toast.success("Logged out successfully!");
+        navigate("/login", { replace: true });
+      } catch (error) {
+        toast.error("Logout failed. Try again.");
+        console.error(error);
+      }
+    };
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">
@@ -178,6 +190,14 @@ const AdminSidebar = ({ activeItem, setActiveItem }) => {
             </div>
           </a>
         ))}
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg mt-8 transition-all duration-200"
+        >
+          <LogOut className="w-5 h-5" />
+          <span>Logout</span>
+        </button>
       </nav>
     </aside>
   );

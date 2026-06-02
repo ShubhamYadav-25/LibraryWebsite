@@ -10,6 +10,7 @@ import {
   User,
 } from 'lucide-react';
 import { Button } from "../components/UIcomponents";
+import AuthLoading from '../components/AuthLoading.jsx';
 import { useNavigate } from "react-router-dom";
 import { DefaultPopup } from '../components/DefaultPopup.jsx';
 import "react-toastify/dist/ReactToastify.css";
@@ -501,11 +502,8 @@ const BookDetailPage = () => {
   // Show loading if bookData is not yet available
   if (!bookData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading book details...</p>
-        </div>
+      <div className="min-h-screen w-full bg-gray-50">
+        <AuthLoading />
       </div>
     );
   }
@@ -585,9 +583,15 @@ const BookDetailPage = () => {
             </div>
             
             <div className="mb-6">
-              <span className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full font-medium">
-                ✓ {bookData.status}
-              </span>
+              {bookData.status === "Available" ? (
+                <span className="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full font-medium">
+                 ✓ Available
+                </span>
+              ) : (
+                <span className="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full font-medium">
+                  ✗ Not Available
+                </span>
+              )}
             </div>
             
             {/* Action Buttons */}

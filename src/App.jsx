@@ -50,7 +50,7 @@ function App() {
 
           <Route
             element={
-              <ProtectedRoute allowedRoles={["student"]}>
+              <ProtectedRoute allowedRoles={["student", "staff"]}>
                 <UserLayout />
               </ProtectedRoute>
             }
@@ -67,7 +67,7 @@ function App() {
 
           <Route
             element={
-              <ProtectedRoute allowedRoles={["admin", "librarian", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "librarian"]}>
                 <AdminLayout />
               </ProtectedRoute>
             }
