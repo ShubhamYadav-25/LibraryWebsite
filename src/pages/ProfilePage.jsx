@@ -52,7 +52,7 @@ const ProfilePage = () => {
       ]);
 
       if (profileRes.status === 200) {
-        setProfileData(profileRes.data.user);
+        setProfileData(profileRes.data);
         setOriginalProfile(profileRes.data.user); // Store original data for change detection
       }
 
