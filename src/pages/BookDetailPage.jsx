@@ -284,7 +284,6 @@ const BookDetailPage = () => {
 
       if (response.status === 200) {
         const fetchedBook = response.data;
-        console.log("Fetched book details:", fetchedBook);
         setBookData(fetchedBook);
         setIsLiked(fetchedBook.is_liked || false);
         syncCurrentUserReview(fetchedBook);

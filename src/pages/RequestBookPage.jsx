@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 
 const RequestBookPage = () => {
   const { user } = useAuth();
-  const studentId = user?.studentId || "";
+
   const today = new Date().toISOString().split("T")[0];
   const CLOUD_NAME = "dirsttw39";
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,6 @@ const RequestBookPage = () => {
     bookName: "",
     author: "",
     publishedYear: "",
-    studentId: studentId,
     issueDate: today,
     dueDate: calculateDueDate(today),
     genre: "",
@@ -39,9 +38,8 @@ const RequestBookPage = () => {
   useEffect(() => {
     setFormData((current) => ({
       ...current,
-      studentId,
     }));
-  }, [setFormData, studentId]);
+  }, [setFormData]);
 
   const handleDueDate = (e) => {
     const newIssueDate = e.target.value;
@@ -58,8 +56,6 @@ const RequestBookPage = () => {
   
     try {
       setLoading(true);
-  
-      console.log(formData.book_id);
   
       const res = await api.post(
         `/books/${formData.book_id}/requests`,
@@ -174,15 +170,6 @@ const RequestBookPage = () => {
                 value={formData.bookName}
                 onChange={(e) => handleInputChange('bookName', e.target.value)}
                 disabled={formData.disabled || false}
-              />
-
-              <FormInput
-                label="Student ID"
-                value={formData.studentId}
-                onChange={(e) => handleInputChange('studentId', e.target.value)}
-                placeholder="Enter student ID"
-                required={true}
-                disabled={true}
               />
 
               <div className="grid grid-cols-2 gap-4">

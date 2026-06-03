@@ -19,23 +19,26 @@ export const useGoogleIdentity = () => {
       return;
     }
 
-    const existingScript = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
+    let script = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
 
-    if (existingScript) {
-      const handleLoad = () => setIsReady(true);
-      existingScript.addEventListener("load", handleLoad);
-      return () => existingScript.removeEventListener("load", handleLoad);
+    const handleLoad = () => {
+      if (window.google?.accounts?.id) {
+        setIsReady(true);
+      }
+    };
+
+    if (!script) {
+      script = document.createElement("script");
+      script.src = GOOGLE_SCRIPT_SRC;
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
     }
 
-    const script = document.createElement("script");
-    script.src = GOOGLE_SCRIPT_SRC;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => setIsReady(true);
-    document.body.appendChild(script);
+    script.addEventListener("load", handleLoad);
 
     return () => {
-      script.onload = null;
+      script.removeEventListener("load", handleLoad);
     };
   }, [clientId]);
 

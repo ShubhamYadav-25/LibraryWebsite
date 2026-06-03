@@ -436,7 +436,6 @@ const UsersPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        console.log("Fetching users...");
         const params = {
           page,
           limit: itemsPerPage,
