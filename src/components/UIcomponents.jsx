@@ -156,41 +156,25 @@ export const Button = ({
   );
 };
 
-export const tailwindColors = [
-    'red-400', 'red-500', 'red-600',
-    'blue-400', 'blue-500', 'blue-600',
-    'green-400', 'green-500', 'green-600',
-    'purple-400', 'purple-500', 'purple-600',
-    'pink-400', 'pink-500', 'pink-600',
-    'yellow-400', 'yellow-500', 'yellow-600',
-    'teal-400', 'teal-500', 'teal-600',
-    'indigo-400', 'indigo-500', 'indigo-600',
-    'orange-400', 'orange-500', 'orange-600',
-    'fuchsia-400', 'fuchsia-500', 'fuchsia-600'
-];
+export const gradients = [
+  "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500",
+  "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500",
+  "bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500",
+  "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500",
+  "bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500",
 
-export const gradientDirections = [
-    'to-t', 'to-tr', 'to-r', 'to-br',
-    'to-b', 'to-bl', 'to-l', 'to-tl'
+  "bg-gradient-to-br from-red-500 via-pink-500 to-fuchsia-500",
+  "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500",
+  "bg-gradient-to-br from-green-500 via-teal-500 to-cyan-500",
+  "bg-gradient-to-br from-orange-500 via-yellow-500 to-red-500",
+
+  "bg-gradient-to-tr from-teal-500 via-cyan-500 to-blue-500",
+  "bg-gradient-to-tr from-pink-500 via-rose-500 to-red-500",
+  "bg-gradient-to-tr from-indigo-500 via-blue-500 to-cyan-500",
 ];
 
 export function getRandomGradientClass() {
-    // Helper function to pick a random item from an array.
-    const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-    const direction = getRandomItem(gradientDirections);
-    const fromColor = getRandomItem(tailwindColors);
-    let viaColor = getRandomItem(tailwindColors);
-    let toColor = getRandomItem(tailwindColors);
-
-    while (viaColor === fromColor) {
-        viaColor = getRandomItem(tailwindColors);
-    }
-    while (toColor === fromColor || toColor === viaColor) {
-        toColor = getRandomItem(tailwindColors);
-    }
-
-    return `bg-gradient-${direction} from-${fromColor} via-${viaColor} to-${toColor}`;
+  return gradients[Math.floor(Math.random() * gradients.length)];
 }
 
 // console.log(getRandomGradientClass());

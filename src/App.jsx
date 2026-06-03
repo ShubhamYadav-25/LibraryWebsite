@@ -8,29 +8,31 @@ import ProtectedRoute from "./components/protectedroutes.jsx";
 
 import UserLayout from "./components/UserLayout.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
-
-import HomePage from "./pages/HomePage.jsx";
-import AboutPage from "./pages/AboutPage.jsx";
-import ContactPage from "./pages/ContactPage.jsx";
-import Dashboard from "./pages/DashboardPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import SignUpPage from "./pages/SignupPage.jsx";
-import VerifyEmailPage from "./pages/VerifyEmailPage.jsx";
-import ResendVerificationPage from "./pages/ResendVerificationPage.jsx";
-import ProfilePage from "./pages/ProfilePage.jsx";
-import RequestBookPage from "./pages/RequestBookPage.jsx";
-import BookDetailPage from "./pages/BookDetailPage.jsx";
-import ReturnBooksPage from "./pages/ReturnPage.jsx";
-import ViewBooksPage from "./pages/ViewBooksPage.jsx";
-import SearchBookPage from "./pages/SearchBookPage.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
-import IssueReturnPage from "./pages/Issue&ReturnPage.jsx";
-import BookCatalogPage from "./pages/BookCatalog.jsx";
-import UsersPage from "./pages/UsersPage.jsx";
-import ReportsPage from "./pages/ReportsPage.jsx";
-import SettingsPage from "./pages/Settings.jsx";
-import FinesPaymentsPage from "./pages/FinePaymentsPage.jsx";
 import { Navigate } from "react-router-dom";
+import AuthLoading from './components/AuthLoading.jsx';
+import { lazy, Suspense } from "react";
+
+const HomePage = lazy(() => import("./pages/HomePage.jsx"));
+const AboutPage = lazy(() => import("./pages/AboutPage.jsx"));
+const ContactPage = lazy(() => import("./pages/ContactPage.jsx"));
+const Dashboard = lazy(() => import("./pages/DashboardPage.jsx"));
+const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
+const SignUpPage = lazy(() => import("./pages/SignupPage.jsx"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage.jsx"));
+const ResendVerificationPage = lazy(() => import("./pages/ResendVerificationPage.jsx"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
+const RequestBookPage = lazy(() => import("./pages/RequestBookPage.jsx"));
+const BookDetailPage = lazy(() => import("./pages/BookDetailPage.jsx"));
+const ReturnBooksPage = lazy(() => import("./pages/ReturnPage.jsx"));
+const ViewBooksPage = lazy(() => import("./pages/ViewBooksPage.jsx"));
+const SearchBookPage = lazy(() => import("./pages/SearchBookPage.jsx"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
+const IssueReturnPage = lazy(() => import("./pages/Issue&ReturnPage.jsx"));
+const BookCatalogPage = lazy(() => import("./pages/BookCatalog.jsx"));
+const UsersPage = lazy(() => import("./pages/UsersPage.jsx"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage.jsx"));
+const SettingsPage = lazy(() => import("./pages/Settings.jsx"));
+const FinesPaymentsPage = lazy(() => import("./pages/FinePaymentsPage.jsx"));
 
 function App() {
   return (
@@ -38,6 +40,7 @@ function App() {
       <Router>
         <ToastContainer position="bottom-right" autoClose={3000} />
 
+        <Suspense fallback={<AuthLoading />}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -82,6 +85,7 @@ function App() {
 
           <Route path="*" element={<h1>404 Not Found</h1>} />
         </Routes>
+        </Suspense>
       </Router>
     </AuthProvider>
   );
