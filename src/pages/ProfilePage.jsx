@@ -147,7 +147,7 @@ const ProfilePage = () => {
       {loading ? (
             <AuthLoading />
           ) : (
-            <>
+            // <>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 
@@ -318,7 +318,7 @@ const ProfilePage = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Security Settings</h3>
               <div className="space-y-2">
                 {securitySettings.map((setting, index) => (
-                  <button
+                  <button type="button"
                     key={index}
                     onClick={() => handleSettingClick(setting.title)}
                     className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-all duration-200 group"
@@ -352,7 +352,7 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
-      </>
+      // </>
       )}
     </div>
   );

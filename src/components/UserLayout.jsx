@@ -198,6 +198,14 @@ const UserSidebar = () => {
           <span>Return Book</span>
         </Link>
 
+        {/* <Link
+          to="/"
+          className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
+        >
+          <User className="w-5 h-5" />
+          <span>Request Stats</span>
+        </Link> */}
+
         <Link
           to="/profile"
           className="flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-teal-50 rounded-lg"
@@ -205,6 +213,8 @@ const UserSidebar = () => {
           <User className="w-5 h-5" />
           <span>My Profile</span>
         </Link>
+
+        
 
         <Link
           to="/finepayments"
@@ -214,7 +224,7 @@ const UserSidebar = () => {
           <span>Pay Fines</span>
         </Link>
 
-        <button
+        <button type="button"
           onClick={handleLogout}
           className="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg mt-8 transition-all duration-200"
         >

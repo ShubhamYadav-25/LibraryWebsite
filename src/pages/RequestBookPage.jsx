@@ -10,15 +10,13 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { Button, FormInput } from "../components/UIcomponents";
-import { useAuth } from "../context/AuthProvider";
 import { useEffect, useState } from "react";
+import { getRandomGradientClass } from "../utils/getRandomGradientClass.js"
 
 
 const RequestBookPage = () => {
-  const { user } = useAuth();
 
   const today = new Date().toISOString().split("T")[0];
-  const CLOUD_NAME = "dirsttw39";
   const [loading, setLoading] = useState(false);
 
 
@@ -105,7 +103,7 @@ const RequestBookPage = () => {
                   <div className="relative mx-auto w-48 h-64 transform transition-transform duration-300 hover:scale-105 rounded-lg mb-8">
                     {formData.image ? (
                      <img
-                       src={formData.image ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${formData.image}` : "/book.png"}
+                       src={formData.image}
                        alt={formData.bookName}
                        className="w-full h-full object-cover rounded-lg shadow-xl"
                        loading="lazy"
@@ -118,7 +116,7 @@ const RequestBookPage = () => {
                      
                      <div
                        className={`w-full h-full flex flex-col items-center justify-center text-white font-bold p-4 text-center ${
-                         gradientClass
+                         getRandomGradientClass
                        }`}
                      >
                        <div className="text-lg leading-tight mb-2">{formData.bookName}</div>

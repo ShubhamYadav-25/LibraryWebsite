@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { 
   BookOpen, 
   Search,
@@ -15,7 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api/axiosInstance.js';
 import { toast } from 'react-toastify';
 
@@ -83,7 +82,7 @@ const BookModal = ({ isOpen, onClose, book, onSave }) => {
           <h2 className="text-2xl font-bold text-gray-900">
             {book ? 'Edit Book' : 'Add New Book'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button type='button' onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -92,7 +91,7 @@ const BookModal = ({ isOpen, onClose, book, onSave }) => {
           <div className="grid md:grid-cols-2 gap-6">
             {/* Book Cover Upload */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label  className="block text-sm font-medium text-gray-700 mb-2">
                 Book Cover
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors cursor-pointer">
@@ -292,14 +291,14 @@ const BookModal = ({ isOpen, onClose, book, onSave }) => {
           </div>
 
           <div className="flex space-x-4 mt-6">
-            <button
+            <button type='button'
               onClick={handleSubmit}
               className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
             >
               <Save className="w-5 h-5" />
               <span>{book ? 'Update Book' : 'Add Book'}</span>
             </button>
-            <button
+            <button type='button'
               onClick={onClose}
               className="px-6 py-3 border border-gray-300 hover:bg-gray-50 rounded-lg font-semibold transition-colors"
             >
@@ -351,7 +350,7 @@ const BookTableRow = ({ book, onEdit, onDelete, onView }) => {
       </td>
       <td className="px-6 py-4">
         <div className="relative">
-          <button
+          <button type="button"
             onClick={() => setShowMenu(!showMenu)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -360,21 +359,21 @@ const BookTableRow = ({ book, onEdit, onDelete, onView }) => {
           
           {showMenu && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-              <button
+              <button type="button"
                 onClick={() => { onView(book); setShowMenu(false); }}
                 className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
               >
                 <Eye className="w-4 h-4" />
                 <span>View Details</span>
               </button>
-              <button
+              <button type="button"
                 onClick={() => { onEdit(book); setShowMenu(false); }}
                 className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
               >
                 <Edit className="w-4 h-4" />
                 <span>Edit</span>
               </button>
-              <button
+              <button type="button"
                 onClick={() => { onDelete(book); setShowMenu(false); }}
                 className="w-full px-4 py-2 text-left hover:bg-gray-50 text-red-600 flex items-center space-x-2"
               >
@@ -431,6 +430,7 @@ const BookCatalogPage = () => {
       const booksData = payload.books || payload.data || payload || [];
   
       setbooks(booksData);
+      console.log(booksData)
       setTotalBooks(payload.totalBooks ?? booksData.length ?? 0);
     } catch (err) {
       console.error('Error fetching books:', err);
@@ -565,15 +565,15 @@ const BookCatalogPage = () => {
             </div>
 
             <div className="flex space-x-3">
-              <button className="px-4 py-2 border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center space-x-2">
+              <button type="button" className="px-4 py-2 border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center space-x-2">
                 <Download className="w-5 h-5" />
                 <span>Export</span>
               </button>
-              <button className="px-4 py-2 border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center space-x-2">
+              <button type="button" className="px-4 py-2 border border-gray-300 hover:bg-gray-50 rounded-lg font-medium transition-colors flex items-center space-x-2">
                 <Upload className="w-5 h-5" />
                 <span>Import</span>
               </button>
-              <button onClick={handleAddBook} className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2">
+              <button type="button" onClick={handleAddBook} className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex items-center space-x-2">
                 <Plus className="w-5 h-5" />
                 <span>Add Book</span>
               </button>
@@ -631,7 +631,7 @@ const BookCatalogPage = () => {
             <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
               <p className="text-sm text-gray-600">{`Showing ${filteredBooks.length} of ${totalBooks} books`}</p>
             <div className="flex space-x-2">
-              <button
+              <button type='button'
                 onClick={() => setPage(prev => Math.max(prev - 1, 1))}
                 disabled={page === 1}
                 className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-100 disabled:opacity-50"

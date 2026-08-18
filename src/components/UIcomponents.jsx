@@ -1,14 +1,16 @@
 import { useState, useRef } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/Date";
-import { useNavigate } from "react-router-dom";
+import api from "../api/axiosInstance";
 import { 
   ChevronRight,
   Heart,
   ArrowRight,
 } from "lucide-react";
+import {getRandomGradientClass} from "../utils/getRandomGradientClass";
 
 
+// eslint-disable-next-line no-unused-vars
 export const SectionBadge = ({ icon: Icon, text, bgColor = "bg-gray-100", textColor = "text-gray-700" }) => (
   <div className={`inline-flex items-center px-4 py-2 ${bgColor} ${textColor} rounded-full text-sm font-medium`}>
     <Icon className="w-4 h-4 mr-2" />
@@ -32,12 +34,12 @@ export const SectionHeader = ({ badge, title, description, className = "" }) => 
 export const CTAButtons = () => (
   <div className="flex flex-col sm:flex-row gap-4">
     <Link to="/auth?mode=register">
-      <button className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex-shrink-0 justify-center">
+      <button type="button" className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex-shrink-0 justify-center">
         Get Started Free
       </button>
     </Link>
     <Link to="/auth?mode=login">
-      <button className="border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex-shrink-0 justify-center">
+      <button type="button" className="border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex-shrink-0 justify-center">
         Try Demo
       </button>
     </Link>
@@ -62,6 +64,7 @@ export const FormInput = ({ label, value, onChange, placeholder, required, type 
   </div>
 );
 
+// eslint-disable-next-line no-unused-vars
 export const StatCard = ({ icon: Icon, title, value, bgColor }) => (
   <div
     className={`${bgColor} rounded-xl p-6 text-white transition-all duration-300 hover:scale-105 hover:shadow-xl cursor-pointer`}
@@ -156,26 +159,7 @@ export const Button = ({
   );
 };
 
-export const gradients = [
-  "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500",
-  "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500",
-  "bg-gradient-to-r from-green-500 via-emerald-500 to-lime-500",
-  "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500",
-  "bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500",
 
-  "bg-gradient-to-br from-red-500 via-pink-500 to-fuchsia-500",
-  "bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500",
-  "bg-gradient-to-br from-green-500 via-teal-500 to-cyan-500",
-  "bg-gradient-to-br from-orange-500 via-yellow-500 to-red-500",
-
-  "bg-gradient-to-tr from-teal-500 via-cyan-500 to-blue-500",
-  "bg-gradient-to-tr from-pink-500 via-rose-500 to-red-500",
-  "bg-gradient-to-tr from-indigo-500 via-blue-500 to-cyan-500",
-];
-
-export function getRandomGradientClass() {
-  return gradients[Math.floor(Math.random() * gradients.length)];
-}
 
 // console.log(getRandomGradientClass());
 
@@ -200,7 +184,7 @@ export const BookCard = ({ book, showActions = true }) => {
     setIsLiked(!isLiked);
     try {
       await api.post(`/books/${book.book_id}/like`,
-        { params, withCredentials: true }
+        { withCredentials: true }
       );
     } catch (error) {
       console.log(error);
@@ -214,7 +198,7 @@ export const BookCard = ({ book, showActions = true }) => {
         <div className="aspect-[3/4] rounded-lg overflow-hidden flex items-center justify-center">
           {book.image ? (
             <img
-              src={book.image ? `https://res.cloudinary.com/dirsttw39/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
+              src={book.image}
               alt={book.title}
               className="w-full h-full object-cover"
               loading="lazy"
@@ -238,7 +222,7 @@ export const BookCard = ({ book, showActions = true }) => {
 
         {/* Heart button only when actions are enabled */}
         {showActions && (
-          <button
+          <button type="button"
             onClick={handleLikeClick}
             className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-colors duration-200"
           >
@@ -285,14 +269,14 @@ export const BookCard = ({ book, showActions = true }) => {
             <div className="flex space-x-2">
               {book.status === 'Available' ? (
                 <>
-                  <button
+                  <button type='button'
                     onClick={handleRequestClick}
                     className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg text-sm font-medium transition-colors duration-200"
                   >
                     Request Book
                   </button>
 
-                  <button
+                  <button type='button'
                     onClick={handleDetailsClick}
                     className="px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg text-sm font-medium transition-colors duration-200"
                   >
@@ -300,7 +284,7 @@ export const BookCard = ({ book, showActions = true }) => {
                   </button>
                 </>
               ) : (
-                <button
+                <button type='button'
                   onClick={handleDetailsClick}
                   className="w-full px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg text-sm font-medium transition-colors duration-200"
                 >
@@ -316,7 +300,7 @@ export const BookCard = ({ book, showActions = true }) => {
 };
 
 
-export const HorizontalScrollSection = ({ title, badge, books }) => {
+export const HorizontalScrollSection = ({ title, badge, books, loading = false }) => {
   const scrollRef = useRef(null);
 
   const scroll = (direction) => {
@@ -343,42 +327,52 @@ export const HorizontalScrollSection = ({ title, badge, books }) => {
           )}
         </div>
         
-        <button className="flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors duration-200">
+        <button type='button' className="flex items-center text-purple-600 hover:text-purple-700 font-medium transition-colors duration-200">
           View All
           <ArrowRight className="w-4 h-4 ml-1" />
         </button>
       </div>
       
       <div className="relative">
-        {books && books.length > 0 ? (
-        <div 
-          ref={scrollRef}
-          className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {books.map((book, index) => (
-            <BookCard key={index} book={book} />
-          ))}
-        </div>):(
+        {loading ? (
+          <div className="text-center py-10 bg-white/60 rounded-2xl border border-gray-100 backdrop-blur-sm">
+            <div className="inline-block w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+            <p className="text-gray-500 text-sm font-medium">Loading books...</p>
+          </div>
+        ) : books && books.length > 0 ? (
+          <div 
+            ref={scrollRef}
+            className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {books.map((book) => (
+              <BookCard key={book.book_id} book={book} />
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">No books available in this section.</p>
           </div>
         )} 
         
         {/* Scroll Buttons */}
-        <button 
-          onClick={() => scroll('left')}
-          className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 z-10"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-600 rotate-180" />
-        </button>
-        
-        <button 
-          onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 z-10"
-        >
-          <ChevronRight className="w-5 h-5 text-gray-600" />
-        </button>
+        {!loading && books && books.length > 0 && (
+          <>
+            <button type='button'
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 z-10"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600 rotate-180" />
+            </button>
+            
+            <button type='button'
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 w-10 h-10 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors duration-200 z-10"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -411,58 +405,70 @@ export const IssuedBookCard = ({ book, isSelected, onSelect }) => {
 
   const [gradientClass] = useState(getRandomGradientClass());
 
+  const cardBorderClass = isSelected
+    ? 'border-purple-500 bg-purple-50'
+    : isOverdue
+    ? 'border-red-200 bg-red-50'
+    : 'border-gray-200 hover:border-purple-300';
+
+  const handleSelect = () => onSelect(book);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect(book);
+    }
+  };
+
   return (
-    <div
-    onClick={() => onSelect(book)}
-    className={`bg-white rounded-xl p-4 border-2 transition-all duration-300 cursor-pointer hover:shadow-lg flex items-center gap-4 ${
-      isSelected 
-        ? 'border-purple-500 bg-purple-50' 
-        : isOverdue 
-        ? 'border-red-200 bg-red-50' 
-        : 'border-gray-200 hover:border-purple-300'
-    }`}
->
-    <div className="w-20 h-26 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
-            {book.image ? (
-            <img
-              src={book.image ? `https://res.cloudinary.com/dirsttw39/image/upload/f_auto,q_auto/${book.image}` : "/book.png"}
-              alt={book.title}
-              className="w-full h-full object-cover"
-            />
-          ) :
+    <button
+      type="button"
+      onClick={handleSelect}
+      onKeyDown={handleKeyDown}
+      aria-pressed={isSelected}
+      className={`bg-white rounded-xl p-4 border-2 transition-all duration-300 hover:shadow-lg flex items-center gap-4 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${cardBorderClass}`}
+    >
+      <div className="w-20 h-26 rounded-lg overflow-hidden flex-shrink-0 shadow-md">
+        {book.image ? (
+          <img
+            src={book.image}
+            alt={book.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
           <div className={`w-full h-full flex items-center justify-center text-white text-xs font-bold ${gradientClass}`}>
             {book.title}
           </div>
-        }
-    </div>
-    
-  <div className="flex-grow flex flex-col min-w-0">
-    <h3 className="font-semibold text-gray-900 mb-1 truncate">{book.title}</h3>
-    <p className="text-sm text-gray-600 mb-2">{book.author}</p>
-        
-    <div className="grid text-xs">
-      <div>
-        <span className="text-gray-500">Issue Date:</span>
-        <span className="ml-2 text-gray-900 font-medium">{`${formatDate(book.issueDate)}`}</span>
+        )}
       </div>
-      <div>
-        <span className="text-gray-500">Due Date:</span>
-        <span className="ml-2 text-gray-900 font-medium">{`${formatDate(book.dueDate)}`}</span>
-      </div>
-    </div>
-        
-        <div className="mt-2">
-            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-              isOverdue 
-                ? 'bg-red-100 text-red-800' 
-                : isDueSoon 
-                ? 'bg-orange-100 text-orange-800' 
-                : 'bg-green-100 text-green-800'
-            }`}>
-              {status}
-            </span>
+
+      <div className="flex-grow flex flex-col min-w-0">
+        <h3 className="font-semibold text-gray-900 mb-1 truncate">{book.title}</h3>
+        <p className="text-sm text-gray-600 mb-2">{book.author}</p>
+
+        <div className="grid text-xs">
+          <div>
+            <span className="text-gray-500">Issue Date:</span>
+            <span className="ml-2 text-gray-900 font-medium">{`${formatDate(book.issueDate)}`}</span>
           </div>
-    </div>
-</div>
+          <div>
+            <span className="text-gray-500">Due Date:</span>
+            <span className="ml-2 text-gray-900 font-medium">{`${formatDate(book.dueDate)}`}</span>
+          </div>
+        </div>
+
+        <div className="mt-2">
+          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+            isOverdue
+              ? 'bg-red-100 text-red-800'
+              : isDueSoon
+              ? 'bg-orange-100 text-orange-800'
+              : 'bg-green-100 text-green-800'
+          }`}>
+            {status}
+          </span>
+        </div>
+      </div>
+    </button>
   );
 };

@@ -1,12 +1,29 @@
 import {
   useState,
   useEffect,
-  useCallback,
-  useRef
+  useCallback
 } from "react";
 import api from "../api/axiosInstance";
-import {HorizontalScrollSection} from '../components/UIcomponents';
+import { HorizontalScrollSection } from '../components/UIcomponents';
 
+const normalizeBook = (book) => ({
+  ...book,
+  ISBN: book.ISBN ?? book.isbn,
+  isbn: book.isbn ?? book.ISBN,
+  genre: book.genre ?? book.category,
+  category: book.category ?? book.genre,
+  image: book.image ?? book.image_url,
+  image_url: book.image_url ?? book.image,
+  is_liked: Boolean(book.is_liked || book.isLiked),
+});
+
+const getBooksFromPayload = (section, payload) => {
+  if (section === "recommended") {
+    return payload?.recommendations || payload?.books || [];
+  }
+
+  return payload?.books || [];
+};
 
 const ViewBooksPage = () => {
   /* ============================= */
@@ -16,20 +33,12 @@ const ViewBooksPage = () => {
   const [recommendedBooks, setRecommendedBooks] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
 
-  const [pageTrending, setPageTrending] = useState(1);
-  const [pageRecommended, setPageRecommended] = useState(1);
-  const [pageNew, setPageNew] = useState(1);
-
-  const limit = 16;
-
-  const [hasMoreTrending, setHasMoreTrending] = useState(true);
-  const [hasMoreRecommended, setHasMoreRecommended] = useState(true);
-  const [hasMoreNew, setHasMoreNew] = useState(true);
+  const limit = 35;
 
   const [loading, setLoading] = useState({
-    trending: false,
-    recommended: false,
-    newArrivals: false,
+    trending: true,
+    recommended: true,
+    newArrivals: true,
   });
 
   const fetchBooks = useCallback(
@@ -42,31 +51,43 @@ const ViewBooksPage = () => {
           withCredentials: true,
         });
 
-        if (res.status === 200 && res.data.books) {
-          const newBooks = res.data.books;
+        if (res.status === 200) {
+          const newBooks = getBooksFromPayload(section, res.data).map(
+            normalizeBook
+          );
 
-          /* Handle hasMore */
-          if (newBooks.length < limit) {
-            if (section === "trending") setHasMoreTrending(false);
-            if (section === "recommended") setHasMoreRecommended(false);
-            if (section === "newArrivals") setHasMoreNew(false);
-          }
-
-          /* Append Data */
+          /* Set Data */
           if (section === "trending") {
-            setTrendingBooks((prev) => [...prev, ...newBooks]);
+            setTrendingBooks(newBooks);
           }
 
           if (section === "recommended") {
-            setRecommendedBooks((prev) => [...prev, ...newBooks]);
+            setRecommendedBooks(newBooks);
           }
 
           if (section === "newArrivals") {
-            setNewArrivals((prev) => [...prev, ...newBooks]);
+            setNewArrivals(newBooks);
           }
         }
       } catch (err) {
         console.error(`Error fetching ${section} books:`, err);
+
+        if (section === "recommended") {
+          try {
+            const fallbackRes = await api.get("/books", {
+              params: { page: 1, limit },
+              withCredentials: true,
+            });
+
+            const fallbackBooks = (fallbackRes.data?.books || []).map(
+              normalizeBook
+            );
+
+            setRecommendedBooks(fallbackBooks);
+          } catch (fallbackErr) {
+            console.error("Error fetching fallback recommendations:", fallbackErr);
+          }
+        }
       } finally {
         setLoading((prev) => ({ ...prev, [section]: false }));
       }
@@ -74,80 +95,11 @@ const ViewBooksPage = () => {
     [limit]
   );
 
-
   useEffect(() => {
     fetchBooks("trending", `/books/trending`, 1);
-    fetchBooks("recommended", `/books`, 1);  //later change to /books/recommended
+    fetchBooks("recommended", `/recommendations`, 1);
     fetchBooks("newArrivals", `/books/new-arrivals`, 1);
   }, [fetchBooks]);
-
-
-  const trendingRef = useRef(null);
-  const recommendedRef = useRef(null);
-  const newRef = useRef(null);
-
-  useEffect(() => {
-    const observerTrending = new IntersectionObserver((entries) => {
-      if (
-        entries[0].isIntersecting &&
-        hasMoreTrending &&
-        !loading.trending
-      ) {
-        setPageTrending((prev) => {
-          const next = prev + 1;
-          fetchBooks("trending", `/books/trending`, next);
-          return next;
-        });
-      }
-    });
-
-    const observerRecommended = new IntersectionObserver((entries) => {
-      if (
-        entries[0].isIntersecting &&
-        hasMoreRecommended &&
-        !loading.recommended
-      ) {
-        setPageRecommended((prev) => {
-          const next = prev + 1;
-          fetchBooks("recommended", `/books`, next);
-          return next;
-        });
-      }
-    });
-
-    const observerNew = new IntersectionObserver((entries) => {
-      if (
-        entries[0].isIntersecting &&
-        hasMoreNew &&
-        !loading.newArrivals
-      ) {
-        setPageNew((prev) => {
-          const next = prev + 1;
-          fetchBooks("newArrivals", `/books/new-arrivals`, next);
-          return next;
-        });
-      }
-    });
-
-    if (trendingRef.current) observerTrending.observe(trendingRef.current);
-    if (recommendedRef.current)
-      observerRecommended.observe(recommendedRef.current);
-    if (newRef.current) observerNew.observe(newRef.current);
-
-    return () => {
-      observerTrending.disconnect();
-      observerRecommended.disconnect();
-      observerNew.disconnect();
-    };
-  }, [
-    fetchBooks,
-    hasMoreTrending,
-    hasMoreRecommended,
-    hasMoreNew,
-    loading.trending,
-    loading.recommended,
-    loading.newArrivals,
-  ]);
 
   /* ============================= */
   /* JSX                           */
@@ -173,12 +125,9 @@ const ViewBooksPage = () => {
             icon: null,
           }}
           books={trendingBooks}
-          showActions={false}
+          loading={loading.trending}
+          showActions={true}
         />
-        {loading.trending && (
-          <p className="text-center text-gray-500">Loading more...</p>
-        )}
-        <div ref={trendingRef} style={{ height: 30 }} />
 
         {/* Recommended */}
         <HorizontalScrollSection
@@ -189,12 +138,9 @@ const ViewBooksPage = () => {
             icon: null,
           }}
           books={recommendedBooks}
+          loading={loading.recommended}
           showActions={true}
         />
-        {loading.recommended && (
-          <p className="text-center text-gray-500">Loading more...</p>
-        )}
-        <div ref={recommendedRef} style={{ height: 30 }} />
 
         {/* New Arrivals */}
         <HorizontalScrollSection
@@ -205,12 +151,9 @@ const ViewBooksPage = () => {
             icon: null,
           }}
           books={newArrivals}
-          showActions={false}
+          loading={loading.newArrivals}
+          showActions={true}
         />
-        {loading.newArrivals && (
-          <p className="text-center text-gray-500">Loading more...</p>
-        )}
-        <div ref={newRef} style={{ height: 30 }} />
       </div>
     </div>
   );

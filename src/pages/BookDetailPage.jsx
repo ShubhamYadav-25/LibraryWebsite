@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
   Heart,
@@ -8,54 +8,17 @@ import {
   Flag,
   Star,
   User,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import { Button } from "../components/UIcomponents";
+import { Button, BookCard } from "../components/UIcomponents";
 import AuthLoading from '../components/AuthLoading.jsx';
-import { useNavigate } from "react-router-dom";
 import { DefaultPopup } from '../components/DefaultPopup.jsx';
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 import api from '../api/axiosInstance.js';
+import {getRandomGradientClass} from '../utils/getRandomGradientClass.js';
 
-const CLOUD_NAME = "dirsttw39";
-
-
-const tailwindColors = [
-    'red-400', 'red-500', 'red-600',
-    'blue-400', 'blue-500', 'blue-600',
-    'green-400', 'green-500', 'green-600',
-    'purple-400', 'purple-500', 'purple-600',
-    'pink-400', 'pink-500', 'pink-600',
-    'yellow-400', 'yellow-500', 'yellow-600',
-    'teal-400', 'teal-500', 'teal-600',
-    'indigo-400', 'indigo-500', 'indigo-600',
-    'orange-400', 'orange-500', 'orange-600',
-    'fuchsia-400', 'fuchsia-500', 'fuchsia-600'
-];
-
-const gradientDirections = [
-    'to-t', 'to-tr', 'to-r', 'to-br',
-    'to-b', 'to-bl', 'to-l', 'to-tl'
-];
-
-function getRandomGradientClass() {
-    // Helper function to pick a random item from an array.
-    const getRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-    const direction = getRandomItem(gradientDirections);
-    const fromColor = getRandomItem(tailwindColors);
-    let viaColor = getRandomItem(tailwindColors);
-    let toColor = getRandomItem(tailwindColors);
-
-    while (viaColor === fromColor) {
-        viaColor = getRandomItem(tailwindColors);
-    }
-    while (toColor === fromColor || toColor === viaColor) {
-        toColor = getRandomItem(tailwindColors);
-    }
-
-    return `bg-gradient-${direction} from-${fromColor} via-${viaColor} to-${toColor}`;
-}
 // Rating Stars Component
 function RatingStars({ rating, size = 'md' }) {
   const sizeClasses = {
@@ -66,18 +29,23 @@ function RatingStars({ rating, size = 'md' }) {
 
   return (
     <div className="flex items-center">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          className={`${sizeClasses[size]} ${
-            star <= Math.floor(rating)
-              ? 'text-yellow-400 fill-current'
-              : star - rating < 1
-              ? 'text-yellow-400 fill-current opacity-50'
-              : 'text-gray-300'
-          }`}
-        />
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        let starClass;
+        if (star <= Math.floor(rating)) {
+          starClass = 'text-yellow-400 fill-current';
+        } else if (star - rating < 1) {
+          starClass = 'text-yellow-400 fill-current opacity-50';
+        } else {
+          starClass = 'text-gray-300';
+        }
+
+        return (
+          <Star
+            key={star}
+            className={`${sizeClasses[size]} ${starClass}`}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -105,11 +73,11 @@ function ReviewCard({ review }) {
           <p className="text-left text-gray-700 leading-relaxed mb-3">{review.comment}</p>
 
           <div className="flex items-center space-x-4 text-sm">
-            <button className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors">
+            <button type='button' className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors">
               <ThumbsUp className="w-4 h-4" />
               <span>Helpful ({review.helpful})</span>
             </button>
-            <button className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors">
+            <button type='button' className="flex items-center space-x-1 text-gray-600 hover:text-red-600 transition-colors">
               <Flag className="w-4 h-4" />
               <span>Report</span>
             </button>
@@ -243,6 +211,11 @@ const BookDetailPage = () => {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const navigate = useNavigate();
 
+  const [similarBooks, setSimilarBooks] = useState([]);
+  const [simPage, setSimPage] = useState(1);
+  const [simTotalPages, setSimTotalPages] = useState(1);
+  const [simTotal, setSimTotal] = useState(0);
+  const [simLoading, setSimLoading] = useState(false);
   const [ratingDistribution, setRatingDistribution] = useState({
     5: 0,
     4: 0,
@@ -268,7 +241,7 @@ const BookDetailPage = () => {
     );
   };
 
-  const fetchBookDetails = async () => {
+  const fetchBookDetails = useCallback(async () => {
     try {
       const bookId = location.state?.bookId;
 
@@ -298,9 +271,9 @@ const BookDetailPage = () => {
       setError("Failed to load book details.");
       return null;
     }
-  };
+  }, [location]);
 
-  const fetchComments = async (bookId) => {
+  const fetchComments = useCallback(async (bookId) => {
     try {
       const response = await api.get(
         `/books/${bookId}/comments`,
@@ -319,9 +292,9 @@ const BookDetailPage = () => {
       console.error("Error fetching comments:", fetchError);
       return [];
     }
-  };
+  }, []);
 
-  const fetchRatingData = async (bookId) => {
+  const fetchRatingData = useCallback(async (bookId) => {
     try {
       const response = await api.get(
         `/books/${bookId}/rating`,
@@ -346,7 +319,7 @@ const BookDetailPage = () => {
     } catch (fetchError) {
       console.error("Error fetching rating:", fetchError);
     }
-  };
+  }, []);
 
   const refreshReviewData = async () => {
     const bookId = bookData?.book_id || location.state?.bookId;
@@ -362,14 +335,45 @@ const BookDetailPage = () => {
 
   useEffect(() => {
     fetchBookDetails();
-  }, [location.state]);
+  }, [fetchBookDetails]);
+
+  const similarScrollRef = useRef(null);
+
+  const scrollSimilar = (direction) => {
+    if (similarScrollRef.current) {
+      const scrollAmount = 320 * 2; // Scroll 2 books at a time
+      similarScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const fetchSimilar = useCallback(async (bookId) => {
+    try {
+      setSimLoading(true);
+      const response = await api.get(`/recommendations/books/${bookId}/similar`, {
+        params: { limit: 30 },
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        setSimilarBooks(response.data.recommendations || []);
+      }
+    } catch (err) {
+      console.error("Error fetching similar books:", err);
+      setSimilarBooks([]);
+    } finally {
+      setSimLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (bookData && bookData.book_id) {
+    if (bookData?.book_id) {
       fetchRatingData(bookData.book_id);
       fetchComments(bookData.book_id);
+      fetchSimilar(bookData.book_id);
     }
-  }, [bookData]);
+  }, [bookData, fetchRatingData, fetchComments, fetchSimilar]);
 
   const handlewishlist = async (e) =>{
     e.stopPropagation();
@@ -519,7 +523,7 @@ const BookDetailPage = () => {
               {bookData.image ? (
                 <img
                   // 1. Removed the redundant ternary check here
-                  src={`https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${bookData.image}`}
+                  src={bookData.image}
                   alt={bookData.title}
                   // 2. Changed object-cover to object-contain
                   className="w-full h-full object-contain"
@@ -557,8 +561,8 @@ const BookDetailPage = () => {
             <p className="text-xl text-gray-600 mb-4">by {bookData.author}</p>
             
             <div className="flex items-center space-x-2 mb-6">
-              <RatingStars rating={parseFloat(bookData.rating) || 0} size="md" />
-              <span className="text-lg font-semibold text-gray-900">{parseFloat(bookData.rating) || 0}</span>
+              <RatingStars rating={Number.parseFloat(bookData.rating) || 0} size="md" />
+              <span className="text-lg font-semibold text-gray-900">{Number.parseFloat(bookData.rating) || 0}</span>
               <span className="text-gray-600">({bookData.totalReviews?.toLocaleString() || 0} reviews)</span>
             </div>
             
@@ -632,6 +636,59 @@ const BookDetailPage = () => {
           </div>
         </div>
         
+        {/* Similar Books Section - Interactive Horizontal Carousel */}
+        {similarBooks.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-12">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-1.5 h-7 bg-teal-500 rounded-full"></div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Similar Books You Might Like</h2>
+                  <p className="text-sm text-gray-500">
+                    {similarBooks.length} related titles based on content similarity
+                  </p>
+                </div>
+              </div>
+
+              {/* Previous (←) and Next (→) Arrow Buttons */}
+              <div className="flex items-center space-x-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => scrollSimilar('left')}
+                  className="w-10 h-10 rounded-xl border border-teal-200 bg-white text-gray-700 hover:bg-teal-500 hover:text-white hover:border-teal-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-95"
+                  title="Scroll previous similar books"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => scrollSimilar('right')}
+                  className="w-10 h-10 rounded-xl border border-teal-200 bg-white text-gray-700 hover:bg-teal-500 hover:text-white hover:border-teal-500 flex items-center justify-center transition-all duration-200 shadow-sm active:scale-95"
+                  title="Scroll next similar books"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Slider Area */}
+            <div className="relative">
+              <div
+                ref={similarScrollRef}
+                className="flex space-x-6 overflow-x-auto scrollbar-hide pb-4 pt-1"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {similarBooks.map((simBook) => (
+                  <div key={simBook.book_id} className="w-64 flex-shrink-0">
+                    <BookCard book={simBook} showActions={true} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Student Reviews Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Student Reviews</h2>
@@ -639,8 +696,8 @@ const BookDetailPage = () => {
           <div className="grid lg:grid-cols-3 gap-8 mb-12">
             {/* Overall Rating */}
             <div className="text-center">
-              <div className="text-6xl font-bold text-gray-900 mb-2">{parseFloat(bookData.rating) || 0}</div>
-              <RatingStars rating={parseFloat(bookData.rating) || 0} size="lg" />
+              <div className="text-6xl font-bold text-gray-900 mb-2">{Number.parseFloat(bookData.rating) || 0}</div>
+              <RatingStars rating={Number.parseFloat(bookData.rating) || 0} size="lg" />
               <p className="text-gray-600 mt-2">Based on {(bookData.totalReviews || 0).toLocaleString()} reviews</p>
             </div>
             
@@ -652,12 +709,12 @@ const BookDetailPage = () => {
           
           {/* Review Actions */}
           <div className="grid md:grid-cols-2 gap-4 mb-8">
-            <button 
+            <button type="button"
             onClick={handleWriteReview}
             className="bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-semibold transition-colors">
               Write a Review
             </button>
-            <button onClick={handleAskQuestion} 
+            <button type='button' onClick={handleAskQuestion} 
             className="border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-900 py-3 rounded-lg font-semibold transition-colors">
               Ask a Question
             </button>
@@ -676,7 +733,7 @@ const BookDetailPage = () => {
 
           
           <div className="text-center mt-8">
-            <button className="text-purple-600 hover:text-purple-700 font-semibold">
+            <button type='button' className="text-purple-600 hover:text-purple-700 font-semibold">
               Load More Reviews
             </button>
           </div>

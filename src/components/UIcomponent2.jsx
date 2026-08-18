@@ -1,18 +1,9 @@
 import {
-  BookOpen,
   Plus,
   UserPlus,
   RotateCcw,
   Star,
 } from 'lucide-react';
-
-const CLOUDINARY_BASE = 'https://res.cloudinary.com/dirsttw39/image/upload';
-const BOOK_IMAGE_SIZE = 'w_100,h_100,c_fill';
-
-const getCloudinaryUrl = (image) =>
-  image
-    ? `${CLOUDINARY_BASE}/${BOOK_IMAGE_SIZE},f_auto,q_auto/${image}`
-    : '/book.png';
 
 const formatActivityStatus = (status) => status?.toLowerCase() || 'unknown';
 
@@ -57,7 +48,7 @@ export const PopularBookItem = ({ title, author, rating = 0, timesIssued = 0, im
   <div className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
     <div className="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
       <img
-        src={getCloudinaryUrl(image)}
+        src={image}
         alt={title}
         className="w-full h-full object-cover"
         loading="lazy"
