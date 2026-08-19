@@ -24,29 +24,46 @@ const GoogleSignInButton = ({
       return;
     }
 
-    if (!googleInitialized) {
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: ({ credential }) => {
-          if (credential) {
-            onCredentialRef.current?.(credential);
+    try {
+      if (!googleInitialized) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: ({ credential }) => {
+            if (credential) {
+              onCredentialRef.current?.(credential);
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        googleInitialized = true;
+      }
+
+      if (!renderedRef.current) {
+        window.google.accounts.id.renderButton(hiddenButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          width: 260,
+          text: "continue_with",
+          shape: "pill",
+        });
+
+        renderedRef.current = true;
+      }
+
+      // Safe One Tap / FedCM prompt with silent fallback on browser backoff
+      try {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            // Silently handle FedCM exponential backoff or dismissals in background
           }
-        },
-      });
-
-      googleInitialized = true;
-    }
-
-    if (!renderedRef.current) {
-      window.google.accounts.id.renderButton(hiddenButtonRef.current, {
-        theme: "outline",
-        size: "large",
-        width: 260,
-        text: "continue_with",
-        shape: "pill",
-      });
-
-      renderedRef.current = true;
+        });
+      } catch {
+        // Silently ignore One Tap / FedCM errors
+      }
+    } catch {
+      // Silently ignore Google initialization errors
     }
   }, [clientId, isReady, isSupported]);
 
@@ -55,13 +72,23 @@ const GoogleSignInButton = ({
       return;
     }
 
-    const fallbackButton = hiddenButtonRef.current?.querySelector(
-      "div[role='button'], iframe"
-    );
+    try {
+      // Explicit manual trigger of the rendered Google OAuth popup flow
+      const fallbackButton = hiddenButtonRef.current?.querySelector(
+        "div[role='button'], iframe, button"
+      );
 
-    fallbackButton?.click?.();
-
-    window.google?.accounts?.id?.prompt?.();
+      if (fallbackButton) {
+        fallbackButton.click();
+      } else {
+        const firstChild = hiddenButtonRef.current?.firstElementChild;
+        if (firstChild && typeof firstChild.click === "function") {
+          firstChild.click();
+        }
+      }
+    } catch (error) {
+      console.error("Google sign-in popup error:", error);
+    }
   };
 
   return (

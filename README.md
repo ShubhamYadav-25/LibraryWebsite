@@ -62,43 +62,43 @@ Modern, ultra-responsive Single Page Application (SPA) frontend for the **Librar
 
 ```mermaid
 flowchart TD
-    Index[main.jsx / index.html] --> App[App.jsx]
+    Index["main.jsx / index.html"] --> App["App.jsx"]
     
-    subgraph ContextLayer [Global State & Contexts]
-        App --> AuthProv[AuthProvider.jsx]
-        AuthProv --> BC[BroadcastChannel: auth_channel]
-        AuthProv --> AxiosInst[Axios Instance & Refresh Queue]
+    subgraph ContextLayer ["Global State & Contexts"]
+        App --> AuthProv["AuthProvider.jsx"]
+        AuthProv --> BC["BroadcastChannel: auth_channel"]
+        AuthProv --> AxiosInst["Axios Instance & Refresh Queue"]
     end
     
-    subgraph RoutingLayer [React Router 7 & Suspense]
-        AuthProv --> Router[BrowserRouter]
-        Router --> PublicRoutes[Public Routes: Home, About, Contact, Auth]
-        Router --> UserGuard[ProtectedRoute: Student / Staff]
-        Router --> AdminGuard[ProtectedRoute: Librarian / Admin]
+    subgraph RoutingLayer ["React Router 7 & Suspense"]
+        AuthProv --> Router["BrowserRouter"]
+        Router --> PublicRoutes["Public Routes: Home, About, Contact, Auth"]
+        Router --> UserGuard["ProtectedRoute: Student / Staff"]
+        Router --> AdminGuard["ProtectedRoute: Librarian / Admin"]
     end
     
-    subgraph LayoutLayer [Layout Shells]
-        UserGuard --> UserLayout[UserLayout.jsx & Header / Sidebar]
-        AdminGuard --> AdminLayout[AdminLayout.jsx & Admin Navigation]
+    subgraph LayoutLayer ["Layout Shells"]
+        UserGuard --> UserLayout["UserLayout.jsx & Header / Sidebar"]
+        AdminGuard --> AdminLayout["AdminLayout.jsx & Admin Navigation"]
     end
     
-    subgraph UserPages [Student Views]
-        UserLayout --> UDash[DashboardPage]
-        UserLayout --> UBooks[ViewBooksPage & SearchBookPage]
-        UserLayout --> UDetail[BookDetailPage]
-        UserLayout --> UReturn[ReturnPage & Renewal]
-        UserLayout --> UFines[FinePaymentsPage & PaymentHandler]
-        UserLayout --> UReq[RequestBookPage]
-        UserLayout --> UProf[ProfilePage]
+    subgraph UserPages ["Student Views"]
+        UserLayout --> UDash["DashboardPage"]
+        UserLayout --> UBooks["ViewBooksPage & SearchBookPage"]
+        UserLayout --> UDetail["BookDetailPage"]
+        UserLayout --> UReturn["ReturnPage & Renewal"]
+        UserLayout --> UFines["FinePaymentsPage & PaymentHandler"]
+        UserLayout --> UReq["RequestBookPage"]
+        UserLayout --> UProf["ProfilePage"]
     end
     
-    subgraph AdminPages [Admin & Librarian Views]
-        AdminLayout --> ADash[AdminDashboard]
-        AdminLayout --> ACatalog[BookCatalog & Add Book]
-        AdminLayout --> AIssue[Issue & Return Page]
-        AdminLayout --> AUsers[UsersPage]
-        AdminLayout --> AReports[ReportsPage & Charts]
-        AdminLayout --> ASettings[Settings & AI Model Sync]
+    subgraph AdminPages ["Admin & Librarian Views"]
+        AdminLayout --> ADash["AdminDashboard"]
+        AdminLayout --> ACatalog["BookCatalog & Add Book"]
+        AdminLayout --> AIssue["Issue & Return Page"]
+        AdminLayout --> AUsers["UsersPage"]
+        AdminLayout --> AReports["ReportsPage & Charts"]
+        AdminLayout --> ASettings["Settings & AI Model Sync"]
     end
 ```
 
