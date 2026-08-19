@@ -52,13 +52,9 @@ const GoogleSignInButton = ({
         renderedRef.current = true;
       }
 
-      // Safe One Tap / FedCM prompt with silent fallback on browser backoff
+      // Safe One Tap / FedCM prompt
       try {
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            // Silently handle FedCM exponential backoff or dismissals in background
-          }
-        });
+        window.google.accounts.id.prompt();
       } catch {
         // Silently ignore One Tap / FedCM errors
       }
